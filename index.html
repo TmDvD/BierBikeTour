@@ -14,30 +14,76 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   background: #fafafa;
 }
-#name-team {
-  width: 90%;
-  margin-top: 20px;
+
+/* Anmeldemaske mittig */
+#joinArea {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 90%;
+  gap: 15px;
 }
+#joinArea input, #joinArea button {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2em;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+/* Teamwahl */
+#teamSelect {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+}
+.teamOption {
+  width: 45%;
+  padding: 15px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  user-select: none;
+  transition: all 0.2s;
+}
+.teamOption.red { background: #f44; }
+.teamOption.blue { background: #44f; }
+.teamOption.selected {
+  filter: brightness(1.2);
+  border: 3px solid #000;
+}
+
+/* Quizbereich */
 #quizArea {
   width: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: flex-start;
   align-items: center;
   padding: 10px;
+  display: none;
 }
 #timer {
   font-size: 2em;
   font-weight: bold;
+  text-align: center;
   margin-top: 10px;
+}
+.categoryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 90%;
+  margin-top:10px;
 }
 .category {
   font-weight: bold;
@@ -45,18 +91,8 @@ body {
   padding: 10px;
   border-radius: 5px;
   text-align: center;
-  width: 90%;
-}
-.questionWrapper {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 90%;
-}
-#questionText {
-  font-size: 1.2em;
-  text-align: center;
-  flex: 1;
+  flex:1;
+  margin-right:10px;
 }
 #pointsCircle {
   width: 60px;
@@ -67,9 +103,13 @@ body {
   justify-content:center;
   align-items:center;
   font-weight:bold;
-  margin-left:10px;
   text-align:center;
   flex-shrink:0;
+}
+#questionText {
+  font-size: 1.2em;
+  text-align: center;
+  margin: 15px 0;
 }
 #options {
   display: flex;
@@ -85,6 +125,10 @@ body {
   background: #eee;
   cursor: pointer;
   user-select: none;
+  transition: all 0.2s;
+}
+#options div:hover {
+  background: #ddd;
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -92,23 +136,24 @@ body {
 </head>
 <body>
 
-<div id="name-team">
+<!-- Anmeldemaske -->
+<div id="joinArea">
   <input type="text" id="playerName" placeholder="Dein Name">
-  <select id="teamSelect">
-    <option value="rot">Rot</option>
-    <option value="blau">Blau</option>
-  </select>
+  <div id="teamSelect">
+    <div class="teamOption red" data-team="rot">Rot</div>
+    <div class="teamOption blue" data-team="blau">Blau</div>
+  </div>
   <button id="joinBtn">Beitreten</button>
 </div>
 
-<div id="quizArea" style="display:none;">
+<!-- Quizbereich -->
+<div id="quizArea">
   <div id="timer">15</div>
-  <div id="categoryTitle" class="category" style="background:#f88">Kategorie</div>
-  <hr style="width:90%; border:1px solid #ccc;">
-  <div class="questionWrapper">
-    <div id="questionText">Frage</div>
-    <div id="pointsCircle"><span id="pointsNumber">1</span><br>Punkte</div>
+  <div class="categoryRow">
+    <div id="categoryTitle" class="category" style="background:#f88">Kategorie</div>
+    <div id="pointsCircle"><span id="pointsNumber">1</span><br>P</div>
   </div>
+  <div id="questionText">Frage</div>
   <div id="options"></div>
 </div>
 
@@ -128,22 +173,33 @@ const gameState = db.collection('game').doc('state');
 
 let currentQ = 0;
 let timerInterval;
+let selectedTeam = null;
 
+// Beispiel-Questions
 let questions = [
-  {category:"Allgemeinwissen", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
-  {category:"Allgemeinwissen", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
-  {category:"Allgemeinwissen", question:"Frage 3?", points:3, options:["A","B","C","D"], answer:2},
-  {category:"Allgemeinwissen", question:"Frage 4?", points:4, options:["A","B","C","D"], answer:3},
-  {category:"Allgemeinwissen", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0},
+  {category:"Allgemeinwissen", color:"#f88", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
+  {category:"Sport", color:"#8f8", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
+  {category:"Geschichte", color:"#88f", question:"Frage 3?", points:3, options:["A","B","C","D"], answer:2},
+  {category:"Kultur", color:"#ff8", question:"Frage 4?", points:4, options:["A","B","C","D"], answer:3},
+  {category:"Wissenschaft", color:"#f8f", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0},
 ];
+
+// Teamwahl
+document.querySelectorAll('.teamOption').forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    document.querySelectorAll('.teamOption').forEach(e=>e.classList.remove('selected'));
+    opt.classList.add('selected');
+    selectedTeam = opt.dataset.team;
+  });
+});
 
 // Spieler beitreten
 document.getElementById('joinBtn').addEventListener('click', ()=>{
   const name = document.getElementById('playerName').value.trim();
-  const team = document.getElementById('teamSelect').value;
   if(!name) return alert("Bitte Name eingeben!");
-  playersCol.add({name, team, score:0}).then(()=>{
-    document.getElementById('name-team').style.display='none';
+  if(!selectedTeam) return alert("Bitte ein Team wählen!");
+  playersCol.add({name, team: selectedTeam, score:0}).then(()=>{
+    document.getElementById('joinArea').style.display='none';
     document.getElementById('quizArea').style.display='flex';
   });
 });
@@ -160,7 +216,9 @@ function showQuestion(index){
     return;
   }
   const q = questions[index];
-  document.getElementById('categoryTitle').textContent = q.category;
+  const catEl = document.getElementById('categoryTitle');
+  catEl.textContent = q.category;
+  catEl.style.background = q.color;
   document.getElementById('questionText').textContent = q.question;
   document.getElementById('pointsNumber').textContent = q.points;
 
@@ -191,8 +249,13 @@ function showQuestion(index){
   clearInterval(timerInterval);
   timerInterval = setInterval(()=>{
     time--;
+    if(time<=0){ 
+      clearInterval(timerInterval);
+      currentQ++;
+      showQuestion(currentQ);
+      return;
+    }
     document.getElementById('timer').textContent=time;
-    if(time<=0){ clearInterval(timerInterval); currentQ++; showQuestion(currentQ);}
   },1000);
 }
 </script>
