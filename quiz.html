@@ -9,28 +9,35 @@
 </head>
 <body>
 <h1>Bierbike Quiz – Spieler</h1>
+
 <div id="name-team">
-<input type="text" id="playerName" placeholder="Name">
+<input type="text" id="playerName" placeholder="Dein Name">
 <select id="teamSelect">
 <option value="rot">Rot</option>
 <option value="blau">Blau</option>
 </select>
 <button id="joinBtn">Beitreten</button>
 </div>
+
 <div id="quizArea" style="display:none;">
-<h2 id="questionText"></h2>
+<div id="timer">15</div>
+<h2 id="categoryTitle" class="category">Kategorie</h2>
+<hr>
+<div id="questionText">Frage</div>
+<div id="pointsCircle"><span id="pointsNumber">0</span><br>Punkte</div>
 <div id="options"></div>
 </div>
+
 <script src="js/quiz.js"></script>
 <script>
-	const firebaseConfig = {
-	  apiKey: "AIzaSyDS2CTzFC_G-dTi-LE5umuvTWET4plsGH0",
-	  authDomain: "as-fensterbau-baf6c.firebaseapp.com",
-	  projectId: "as-fensterbau-baf6c",
-	  storageBucket: "as-fensterbau-baf6c.firebasestorage.app",
-	  messagingSenderId: "25696521871",
-	  appId: "1:25696521871:web:35cca5b0e39f88c4576afa"
-	};
+const firebaseConfig = {
+  apiKey: "AIzaSyDS2CTzFC_G-dTi-LE5umuvTWET4plsGH0",
+  authDomain: "as-fensterbau-baf6c.firebaseapp.com",
+  projectId: "as-fensterbau-baf6c",
+  storageBucket: "as-fensterbau-baf6c.firebasestorage.app",
+  messagingSenderId: "25696521871",
+  appId: "1:25696521871:web:35cca5b0e39f88c4576afa"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 </script>
