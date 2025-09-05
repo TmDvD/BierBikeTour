@@ -1,220 +1,288 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Bierbike Quiz</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    #joinArea, #quizArea {
-      width: 90%;
-      max-width: 500px;
-      text-align: center;
-    }
-    h1 { margin-bottom: 20px; }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      font-size: 1.1em;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    .teamSelect {
-      display: flex;
-      justify-content: space-around;
-      margin: 15px 0;
-    }
-    .teamBtn {
-      flex: 1;
-      margin: 0 5px;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 1.1em;
-      cursor: pointer;
-      border: none;
-      color: white;
-    }
-    .red { background: #d9534f; }
-    .blue { background: #0275d8; }
-    .inactive { opacity: 0.4; }
-    .selected { border: 3px solid #000; filter: brightness(1.2); }
-    #questionHeader {
-      background: #ddd;
-      padding: 10px;
-      border-radius: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-    #playerScore {
-      font-size: 1.2em;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    #timer {
-      font-size: 1.5em;
-      margin: 10px 0;
-      font-weight: bold;
-    }
-    .answerBtn {
-      width: 100%;
-      padding: 15px;
-      margin: 8px 0;
-      font-size: 1em;
-      border-radius: 8px;
-      border: 1px solid #aaa;
-      cursor: pointer;
-      background: #fff;
-    }
-    #countdownOverlay {
-      position: fixed;
-      top:0;
-      left:0;
-      width:100%;
-      height:100%;
-      background: rgba(0,0,0,0.9);
-      color:white;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      font-size:3em;
-      display:none;
-      z-index:1000;
-    }
-  </style>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <meta charset="UTF-8">
+    <title>Bierbike Quiz – Spieler</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #fafafa;
+        }
+        #joinArea, #quizArea {
+            width: 90%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #joinArea {
+            height: 100%;
+            gap: 15px;
+        }
+        #joinArea img {
+            max-width: 150px;
+            margin-bottom: 15px;
+        }
+        #joinArea input, #joinArea button {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2em;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+        #teamSelect {
+            display: flex;
+            width: 100%;
+            justify-content: space-around;
+            gap: 10px;
+        }
+        .teamOption {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            user-select: none;
+            transition: all 0.2s;
+        }
+        .teamOption.red { background: #f44; }
+        .teamOption.blue { background: #44f; }
+        .teamOption.selected { filter: brightness(1.2); border: 3px solid #000; }
+        .teamOption.unselected { filter: grayscale(80%); }
+        #quizArea { display: none; flex-direction: column; gap: 10px; }
+        #questionTimer {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 5px;
+        }
+        .categoryRow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            border-radius: 5px;
+            padding: 10px;
+            color: white;
+        }
+        .categoryTitle { font-weight: bold; }
+        #pointsCircle {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        #questionText {
+            text-align: center;
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #options { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+        #options div {
+            padding: 15px;
+            background: #eee;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #options div:hover { background: #ddd; }
+        #playerScore {
+            font-weight: bold;
+            margin-bottom: 5px;
+            text-align: center;
+        }
+        #startCountdown {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3em;
+            color: white;
+            display: none;
+            z-index: 1000;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
 <div id="joinArea">
-  <img id="logo" src="Bilder/logo_lightmode.png" alt="Logo" style="max-width:150px;margin-bottom:20px;">
-  <h1>Bierbike Quiz</h1>
-  <input id="playerName" type="text" placeholder="Dein Name (max 10 Zeichen)">
-  <div class="teamSelect">
-    <button id="redBtn" class="teamBtn red">Rotes Team</button>
-    <button id="blueBtn" class="teamBtn blue">Blaues Team</button>
-  </div>
-  <button id="joinBtn">Beitreten</button>
+    <img id="logo" src="Bilder/logo_lightmode.png" alt="Bierbike Quiz Logo">
+    <input type="text" id="playerName" placeholder="Dein Name (max.10)" maxlength="10">
+    <div id="teamSelect">
+        <div class="teamOption red" data-team="rot">Rot</div>
+        <div class="teamOption blue" data-team="blau">Blau</div>
+    </div>
+    <button id="joinBtn">Beitreten</button>
 </div>
 
-<div id="quizArea" style="display:none;">
-  <div id="playerScore">Punkte: 0</div>
-  <div id="questionHeader">
-    <div id="categoryName">Kategorie</div>
-    <div id="questionPoints">1 Punkt</div>
-  </div>
-  <div id="timer">15</div>
-  <div id="questionText">Frage erscheint hier…</div>
-  <div id="answers"></div>
-</div>
+<div id="startCountdown">3</div>
 
-<div id="countdownOverlay">3</div>
+<div id="quizArea">
+    <div id="playerScore">Punkte: 0</div>
+    <div id="categoryRow" class="categoryRow">
+        <div class="categoryTitle">Kategorie</div>
+        <div id="pointsCircle"><span id="pointsNumber">1</span><br>P</div>
+    </div>
+    <div id="questionTimer">15</div>
+    <div id="questionText">Frage</div>
+    <div id="options"></div>
+</div>
 
 <script>
 const firebaseConfig = {
-  apiKey: "AIzaSyDS2CTzFC_G-dTi-LE5umuvTWET4plsGH0",
-  authDomain: "as-fensterbau-baf6c.firebaseapp.com",
-  projectId: "as-fensterbau-baf6c",
-  storageBucket: "as-fensterbau-baf6c.firebasestorage.app",
-  messagingSenderId: "25696521871",
-  appId: "1:25696521871:web:35cca5b0e39f88c4576afa"
+    apiKey: "AIzaSyDS2CTzFC_G-dTi-LE5umuvTWET4plsGH0",
+    authDomain: "as-fensterbau-baf6c.firebaseapp.com",
+    projectId: "as-fensterbau-baf6c",
+    storageBucket: "as-fensterbau-baf6c.firebasestorage.app",
+    messagingSenderId: "25696521871",
+    appId: "1:25696521871:web:35cca5b0e39f88c4576afa"
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
-const playersCol = db.collection("players");
-const gameState = db.collection("game").doc("state");
+const playersCol = db.collection('players');
+const gameState = db.collection('game').doc('state');
 
-let selectedTeam = null;
-let currentPlayerId = null;
-let playerScore = 0;
+let playerData=null;
+let questionTimer;
+let currentQIndex=0;
+let questionOrder=[];
 
-// Darkmode-Logo
-if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-  document.getElementById("logo").src = "Bilder/logo_darkmode.png";
+// Light/Dark Logo
+function updateLogo(){
+    const logo=document.getElementById('logo');
+    if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+        logo.src='Bilder/logo_darkmode.png';
+    } else { logo.src='Bilder/logo_lightmode.png'; }
+}
+window.addEventListener('load', updateLogo);
+if(window.matchMedia){
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateLogo);
 }
 
-// Team Buttons
-document.getElementById("redBtn").addEventListener("click", () => selectTeam("rot"));
-document.getElementById("blueBtn").addEventListener("click", () => selectTeam("blau"));
+// Teamwahl
+let selectedTeam=null;
+document.querySelectorAll('.teamOption').forEach(el=>{
+    el.addEventListener('click',()=>{
+        selectedTeam=el.dataset.team;
+        document.querySelectorAll('.teamOption').forEach(e=>e.classList.remove('selected','unselected'));
+        el.classList.add('selected');
+        document.querySelectorAll('.teamOption').forEach(e=>{if(e!==el)e.classList.add('unselected');});
+    });
+});
 
-function selectTeam(team) {
-  selectedTeam = team;
-  document.getElementById("redBtn").classList.remove("selected","inactive");
-  document.getElementById("blueBtn").classList.remove("selected","inactive");
-  if (team === "rot") {
-    document.getElementById("redBtn").classList.add("selected");
-    document.getElementById("blueBtn").classList.add("inactive");
-  } else {
-    document.getElementById("blueBtn").classList.add("selected");
-    document.getElementById("redBtn").classList.add("inactive");
-  }
+// Spieler beitreten
+document.getElementById('joinBtn').addEventListener('click', async ()=>{
+    let name=document.getElementById('playerName').value.trim();
+    if(!name){alert("Bitte Name eingeben!"); return;}
+    if(name.length>10) name=name.slice(0,10);
+    if(!selectedTeam){alert("Bitte Team wählen!"); return;}
+    const snap = await playersCol.where('name','==',name).get();
+    if(!snap.empty){alert("Name bereits vergeben!"); return;}
+
+    // Beispiel-Fragen zufällig für Spieler
+    const categories=["Allgemeinwissen","Sport","Geschichte","Kultur","Wissenschaft"];
+    let questions=[];
+    categories.forEach(cat=>{
+        for(let pts=1; pts<=5; pts++){
+            questions.push({category:cat, points:pts, question:`${cat} Frage ${pts}`, options:["A","B","C","D"], answer:Math.floor(Math.random()*4), color:`#${Math.floor(Math.random()*16777215).toString(16)}`});
+        }
+    });
+    questionOrder = questions.sort(()=>0.5-Math.random());
+
+    const docRef = await playersCol.add({name, team:selectedTeam, score:0, questionOrder});
+    playerData={id:docRef.id, name, team:selectedTeam, score:0};
+
+    document.getElementById('joinArea').style.display='none';
+    document.getElementById('startCountdown').style.display='flex';
+});
+
+// Countdown starten
+let startCountdownVal=3;
+let startCountdownInterval;
+function startCountdown(){
+    startCountdownInterval=setInterval(()=>{
+        document.getElementById('startCountdown').textContent=startCountdownVal;
+        if(startCountdownVal<=0){
+            clearInterval(startCountdownInterval);
+            document.getElementById('startCountdown').style.display='none';
+            showQuestion(currentQIndex);
+        }
+        startCountdownVal--;
+    },1000);
 }
 
-// Join
-document.getElementById("joinBtn").addEventListener("click", async () => {
-  const name = document.getElementById("playerName").value.trim();
-  if(!name || name.length>10) { alert("Ungültiger Name (max 10 Zeichen)!"); return; }
-  const existing = await playersCol.where("name","==",name).get();
-  if(!existing.empty) { alert("Name schon vergeben!"); return; }
-  if(!selectedTeam){ alert("Bitte Team wählen!"); return; }
-
-  const docRef = await playersCol.add({name,team:selectedTeam,score:0});
-  currentPlayerId = docRef.id;
-  document.getElementById("joinArea").style.display="none";
-  document.getElementById("quizArea").style.display="block";
-});
-
-// Listener GameState
-gameState.onSnapshot(doc=>{
-  const data = doc.data();
-  if(!data) return;
-  if(data.gameReset){
-    // Reset zurück zur Anmeldung
-    document.getElementById("quizArea").style.display="none";
-    document.getElementById("joinArea").style.display="block";
-    document.getElementById("playerName").value="";
-    selectedTeam=null;
-    if(currentPlayerId){ playersCol.doc(currentPlayerId).delete(); currentPlayerId=null; }
-    gameState.update({gameReset:false});
-  }
-  if(data.started){
-    startCountdown(15); // Starttimer mit Farbwechsel
-  }
-});
-
-// Countdown Overlay (Start)
-function startCountdown(sec){
-  const overlay = document.getElementById("countdownOverlay");
-  overlay.style.display="flex";
-  let c=sec;
-  const colors=["#d9534f","#0275d8","#5cb85c","#f0ad4e","#6f42c1"];
-  let idx=0;
-  overlay.style.background=colors[idx];
-  overlay.textContent=c;
-  const int=setInterval(()=>{
-    c--;
-    idx=(idx+1)%colors.length;
-    overlay.style.background=colors[idx];
-    overlay.textContent=c>0?c:"Start!";
-    if(c<0){
-      clearInterval(int);
-      overlay.style.display="none";
-      // Hier Spielstart → Fragen laden usw.
+// Frage anzeigen
+function showQuestion(index){
+    if(index>=questionOrder.length){
+        document.getElementById('quizArea').innerHTML="<h2>Feierabend, ihr Legenden! 🍺</h2>";
+        return;
     }
-  },1000);
+    const q=questionOrder[index];
+    document.getElementById('quizArea').style.display='flex';
+    document.getElementById('playerScore').textContent=`Punkte: ${playerData.score}`;
+
+    // Kategorie
+    const catRow=document.getElementById('categoryRow');
+    catRow.style.background=q.color;
+    catRow.querySelector('.categoryTitle').textContent=q.category;
+    document.getElementById('pointsNumber').innerHTML=q.points+(q.points===1?"<br>Punkt":"<br>Punkte");
+
+    document.getElementById('questionText').textContent=q.question;
+    const optionsDiv=document.getElementById('options');
+    optionsDiv.innerHTML='';
+    q.options.forEach((opt,i)=>{
+        const div=document.createElement('div');
+        div.textContent=opt;
+        div.addEventListener('click',()=>{
+            if(i===q.answer) playerData.score+=q.points;
+            document.getElementById('playerScore').textContent=`Punkte: ${playerData.score}`;
+            clearInterval(questionTimer);
+            setTimeout(()=>{currentQIndex++; showQuestion(currentQIndex);},1000);
+        });
+        optionsDiv.appendChild(div);
+    });
+
+    // Timer
+    let time=15;
+    document.getElementById('questionTimer').textContent=time;
+    questionTimer=setInterval(()=>{
+        time--;
+        document.getElementById('questionTimer').textContent=time;
+        if(time<=0){
+            clearInterval(questionTimer);
+            setTimeout(()=>{currentQIndex++; showQuestion(currentQIndex);},1000);
+        }
+    },1000);
 }
+
+window.addEventListener('load',()=>{
+    document.getElementById('startCountdown').addEventListener('click', startCountdown);
+});
 </script>
 </body>
 </html>
