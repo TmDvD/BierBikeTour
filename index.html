@@ -22,7 +22,7 @@ input, button { width:100%; padding:12px; font-size:1.1em; margin:8px 0; border-
 .answerBtn { width:100%; min-height:60px; margin:8px 0; font-size:1em; border-radius:8px; border:1px solid #aaa; cursor:pointer; background:#fff; transition:background 0.3s, transform 0.3s;}
 .answerBtn.correct { background-color:#a2d5a2; }
 .answerBtn.wrong { background-color:#f4a2a2; }
-#countdownOverlay { position:fixed; top:0; left:0; width:100%; height:100%; color:white; display:flex; justify-content:center; align-items:center; font-size:3em; display:none; z-index:1000; transition: color 0.5s ease;}
+#countdownOverlay { position:fixed; top:20%; left:0; width:100%; height:60px; color:white; display:flex; justify-content:center; align-items:center; font-size:3em; display:none; z-index:1000; transition: color 0.5s ease;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -202,35 +202,57 @@ function startCountdown(sec){
 // Frage anzeigen
 function showQuestion(){
   clearInterval(questionTimer);
-  const qSet=questionCategories[currentQuestionSet];
-  const q=qSet.questions[currentQuestionIndex];
+  const qSet = questionCategories[currentQuestionSet];
+  const q = qSet.questions[currentQuestionIndex];
 
-  document.getElementById("categoryName").textContent=qSet.category;
-  document.getElementById("questionText").textContent=q.text;
+  const categoryEl = document.getElementById("categoryName");
+  categoryEl.textContent = qSet.category;
 
-  const currentPoints=currentQuestionIndex+1;
-  document.getElementById("questionPoints").textContent=currentPoints+" Punkt"+(currentPoints>1?"e":"");
+  // Kategorieanimation nur zu Beginn der Kategorie
+  if(currentQuestionIndex === 0){
+    animateCategory(categoryEl, currentQuestionSet);
+  }
 
-  const answersDiv=document.getElementById("answers");
-  answersDiv.innerHTML="";
+  document.getElementById("questionText").textContent = q.text;
 
-  let timeLeft=questionDuration;
-  const timerEl=document.getElementById("timer");
-  timerEl.textContent=timeLeft;
-  questionTimer=setInterval(()=>{
+  const currentPoints = currentQuestionIndex + 1;
+  document.getElementById("questionPoints").textContent = currentPoints + " Punkt" + (currentPoints>1?"e":"");
+
+  const answersDiv = document.getElementById("answers");
+  answersDiv.innerHTML = "";
+
+  let timeLeft = questionDuration;
+  const timerEl = document.getElementById("timer");
+  timerEl.textContent = timeLeft;
+  questionTimer = setInterval(()=>{
     timeLeft--;
-    timerEl.textContent=timeLeft;
-    if(timeLeft<=0){ clearInterval(questionTimer); autoNextQuestion(); }
+    timerEl.textContent = timeLeft;
+    if(timeLeft <= 0){ clearInterval(questionTimer); autoNextQuestion(); }
   },1000);
 
   q.answers.forEach(a=>{
-    const btn=document.createElement("button");
-    btn.textContent=a.text;
-    btn.className="answerBtn";
-    btn.dataset.correct=a.correct;
-    btn.onclick=()=>selectAnswer(btn,a.correct,currentPoints);
+    const btn = document.createElement("button");
+    btn.textContent = a.text;
+    btn.className = "answerBtn";
+    btn.dataset.correct = a.correct;
+    btn.onclick = ()=>selectAnswer(btn, a.correct, currentPoints);
     answersDiv.appendChild(btn);
   });
+}
+
+// Kategorie animieren
+function animateCategory(categoryEl, categoryIndex){
+  const colors = ["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
+  const color = colors[categoryIndex % colors.length];
+
+  categoryEl.style.transition = "transform 0.3s, border 0.3s";
+  categoryEl.style.border = "4px solid " + color;
+  categoryEl.style.transform = "scale(1.5)";
+  
+  setTimeout(()=>{
+    categoryEl.style.transform = "scale(1)";
+    categoryEl.style.border = "none";
+  },2000);
 }
 
 // Antwort auswählen
@@ -262,7 +284,6 @@ function autoNextQuestion(){
       alert("Quiz beendet!");
       return;
     }
-    alert("Kategorie abgeschlossen!");
   }
   showQuestion();
 }
