@@ -3,62 +3,108 @@
 <head>
 <meta charset="UTF-8">
 <title>Bierbike Quiz – Spieler</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
-  body { font-family: sans-serif; margin:0; }
-  h1,h2,h3 { margin:5px 0; text-align:center; }
-  #timer { font-size:2em; font-weight:bold; margin-bottom:15px; text-align:center; }
-  .category { font-weight:bold; color:white; padding:8px; border-radius:5px; margin-bottom:5px; text-align:center; }
-  .questionWrapper { display:flex; justify-content: space-between; align-items:center; margin-bottom:10px; flex-wrap: wrap; }
-  #questionText { flex:1; font-size:1.2em; margin-bottom:5px; text-align:center; }
-  #pointsCircle { width:60px; height:60px; border-radius:50%; background:#ddd; text-align:center; line-height:1.2; font-weight:bold; margin-left:10px; }
-  hr { border:1px solid #ccc; margin:5px 0 10px 0; }
-  #options div { margin:5px 0; padding:12px; border:1px solid #333; cursor:pointer; border-radius:5px; font-size:1.1em; text-align:center; }
-
-  /* Mobil-Optimierung Hochkant */
-  @media (max-width: 768px) {
-    body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-    }
-    #quizArea, #name-team {
-      width: 90%;
-    }
-    .questionWrapper {
-      flex-direction: column;
-      align-items: center;
-    }
-    #pointsCircle {
-      margin-left: 0;
-      margin-top: 10px;
-    }
-    #options div {
-      width: 100%;
-    }
-  }
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  background: #fafafa;
+}
+#name-team {
+  width: 90%;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+#quizArea {
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  align-items: center;
+  padding: 10px;
+}
+#timer {
+  font-size: 2em;
+  font-weight: bold;
+  margin-top: 10px;
+}
+.category {
+  font-weight: bold;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  width: 90%;
+}
+.questionWrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 90%;
+}
+#questionText {
+  font-size: 1.2em;
+  text-align: center;
+  flex: 1;
+}
+#pointsCircle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background:#ddd;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-weight:bold;
+  margin-left:10px;
+  text-align:center;
+  flex-shrink:0;
+}
+#options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 90%;
+}
+#options div {
+  padding: 15px;
+  font-size: 1.2em;
+  border-radius: 8px;
+  text-align: center;
+  background: #eee;
+  cursor: pointer;
+  user-select: none;
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-<h1>Bierbike Quiz</h1>
-
 <div id="name-team">
-  <input type="text" id="playerName" placeholder="Dein Name" style="width:100%; padding:8px; font-size:1em;">
-  <select id="teamSelect" style="width:100%; padding:8px; margin-top:5px; font-size:1em;">
+  <input type="text" id="playerName" placeholder="Dein Name">
+  <select id="teamSelect">
     <option value="rot">Rot</option>
     <option value="blau">Blau</option>
   </select>
-  <button id="joinBtn" style="width:100%; padding:10px; margin-top:5px; font-size:1.1em;">Beitreten</button>
+  <button id="joinBtn">Beitreten</button>
 </div>
 
 <div id="quizArea" style="display:none;">
   <div id="timer">15</div>
   <div id="categoryTitle" class="category" style="background:#f88">Kategorie</div>
-  <hr>
+  <hr style="width:90%; border:1px solid #ccc;">
   <div class="questionWrapper">
     <div id="questionText">Frage</div>
     <div id="pointsCircle"><span id="pointsNumber">1</span><br>Punkte</div>
@@ -93,12 +139,12 @@ let questions = [
 
 // Spieler beitreten
 document.getElementById('joinBtn').addEventListener('click', ()=>{
-  const name = document.getElementById('playerName').value;
+  const name = document.getElementById('playerName').value.trim();
   const team = document.getElementById('teamSelect').value;
   if(!name) return alert("Bitte Name eingeben!");
   playersCol.add({name, team, score:0}).then(()=>{
     document.getElementById('name-team').style.display='none';
-    document.getElementById('quizArea').style.display='block';
+    document.getElementById('quizArea').style.display='flex';
   });
 });
 
