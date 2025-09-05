@@ -1,147 +1,121 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<title>Bierbike Quiz – Admin</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<style>
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
-}
-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  background: #fafafa;
-}
-
-/* Passwortfenster mittig */
-#passwordPrompt {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 90%;
-}
-.adminInput {
-  width: 100%;
-  padding: 15px;
-  font-size: 1.2em;
-  margin-top: 10px;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-
-/* Admin Bereich */
-#adminArea {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  align-items: center;
-}
-#header {
-  width: 100%;
-  text-align: center;
-  padding: 10px 0;
-  position: sticky;
-  top: 0;
-  background:#fafafa;
-  z-index: 100;
-}
-#timer {
-  font-size: 2em;
-  font-weight: bold;
-  text-align: center;
-  margin: 10px 0;
-}
-
-/* Teams nebeneinander */
-#teamsContainer {
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-  margin: 10px 0;
-}
-.teamColumn {
-  width: 45%;
-  background:#eee;
-  padding:10px;
-  border-radius:5px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-#redTeam { background:#f88; }
-#blueTeam { background:#ccf; }
-.teamColumn h3 {
-  margin: 0 0 5px 0;
-  text-align: center;
-}
-.teamColumn .totalPoints {
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-/* Spieler mittig */
-.teamColumn .player {
-  text-align: center;
-  margin: 2px 0;
-}
-
-/* Buttons */
-#adminControls {
-  width: 90%;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-#adminControls button {
-  width: 100%;
-  padding: 15px;
-  font-size:1.1em;
-  border-radius: 8px;
-}
-</style>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <meta charset="UTF-8">
+  <title>Bierbike Quiz – Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    body {
+      margin:0;
+      font-family:sans-serif;
+      background:#fafafa;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      min-height:100vh;
+    }
+    #loginArea, #adminArea {
+      width:90%;
+      max-width:600px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      margin-top:20px;
+    }
+    input, button {
+      width:100%;
+      padding:15px;
+      margin:5px 0;
+      font-size:1.2em;
+      border-radius:8px;
+      box-sizing:border-box;
+    }
+    #adminArea { display:none; }
+    h1 { text-align:center; margin:10px 0; }
+    #timer { font-size:2em; font-weight:bold; margin:10px; }
+    .teams {
+      display:flex;
+      justify-content:space-between;
+      width:100%;
+      margin-top:10px;
+    }
+    .teamBox {
+      flex:1;
+      margin:0 5px;
+      padding:10px;
+      background:#ddd;
+      border-radius:8px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+    }
+    .teamBox h2 { margin:0; font-size:1.1em; }
+    .playerItem {
+      padding:5px 0;
+      text-align:center;
+      width:100%;
+      border-bottom:1px solid #ccc;
+    }
+    .buttons {
+      display:flex;
+      gap:10px;
+      margin-top:15px;
+      width:100%;
+    }
+    .buttons button {
+      flex:1;
+      padding:15px;
+      font-size:1.1em;
+      border-radius:8px;
+      cursor:pointer;
+    }
+    #countdownOverlay {
+      position:fixed;
+      top:0;
+      left:0;
+      width:100%;
+      height:100%;
+      background:rgba(0,0,0,0.7);
+      color:white;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      font-size:3em;
+      display:none;
+      z-index:1000;
+    }
+  </style>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-<!-- Passwort Login -->
-<div id="passwordPrompt">
-  <input type="password" id="adminPass" placeholder="Passwort" class="adminInput">
-  <button id="loginBtn" class="adminInput">Login</button>
+<div id="loginArea">
+  <h1>Admin Login</h1>
+  <input type="password" id="adminPass" placeholder="Passwort">
+  <button id="loginBtn">Login</button>
 </div>
 
-<!-- Admin Bereich -->
-<div id="adminArea" style="display:none;">
-  <div id="header">
-    <h1>Bierbike Quiz</h1>
-    <h2>Admin</h2>
-    <div id="timer">Restzeit: 0 s</div>
-  </div>
-
-  <div id="teamsContainer">
-    <div id="redTeam" class="teamColumn">
-      <h3 id="redTeamTitle">Rotes Team (0)</h3>
-      <div class="totalPoints">0 P.</div>
+<div id="adminArea">
+  <h1>Bierbike Quiz – Admin</h1>
+  <div id="timer">00:00</div>
+  <div class="teams">
+    <div class="teamBox" id="redTeam">
+      <h2>Rotes Team (0) – 0 P</h2>
+      <div class="playersList"></div>
     </div>
-    <div id="blueTeam" class="teamColumn">
-      <h3 id="blueTeamTitle">Blaues Team (0)</h3>
-      <div class="totalPoints">0 P.</div>
+    <div class="teamBox" id="blueTeam">
+      <h2>Blaues Team (0) – 0 P</h2>
+      <div class="playersList"></div>
     </div>
   </div>
-
-  <div id="adminControls">
-    <button id="startBtn">Quiz starten</button>
-    <button id="resetBtn">Quiz zurücksetzen</button>
+  <div class="buttons">
+    <button id="startBtn">Start Quiz</button>
+    <button id="resetBtn">Reset</button>
   </div>
 </div>
+
+<div id="countdownOverlay">3</div>
 
 <script>
 const firebaseConfig = {
@@ -157,88 +131,73 @@ const db = firebase.firestore();
 const playersCol = db.collection('players');
 const gameState = db.collection('game').doc('state');
 
-let quizTotalTime = 0;
-let quizTimerInterval;
+let allPlayers = [];
+let countdownVal = 3;
 
-// Admin Login
-document.getElementById('loginBtn').addEventListener('click', ()=>{
-  if(document.getElementById('adminPass').value==="1557"){
-    document.getElementById('passwordPrompt').style.display="none";
-    document.getElementById('adminArea').style.display="flex";
-    updateLobbyAndScores();
-  } else alert("Falsches Passwort!");
+// Login
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const pw = document.getElementById('adminPass').value;
+  if(pw !== "1557"){ alert("Falsches Passwort!"); return; }
+  document.getElementById('loginArea').style.display="none";
+  document.getElementById('adminArea').style.display="flex";
+  loadPlayers();
 });
 
-// Lobby & Punkte
-function updateLobbyAndScores(){
-  playersCol.get().then(snapshot=>{
-    let redScore=0, blueScore=0;
-    let redCount=0, blueCount=0;
-    const redDiv = document.getElementById('redTeam');
-    const blueDiv = document.getElementById('blueTeam');
+// Spieler laden
+async function loadPlayers(){
+  const snap = await playersCol.get();
+  allPlayers=[];
+  snap.forEach(doc=>allPlayers.push({...doc.data(),id:doc.id}));
+  renderTeams();
+}
 
-    // Spielerlisten zurücksetzen
-    redDiv.querySelectorAll('.player').forEach(e=>e.remove());
-    blueDiv.querySelectorAll('.player').forEach(e=>e.remove());
+// Teams rendern
+function renderTeams(){
+  const redBox=document.getElementById('redTeam');
+  const blueBox=document.getElementById('blueTeam');
+  redBox.querySelector('.playersList').innerHTML="";
+  blueBox.querySelector('.playersList').innerHTML="";
+  let redCount=0,blueCount=0,redPoints=0,bluePoints=0;
 
-    snapshot.forEach(doc=>{
-      const data = doc.data();
-      const el = document.createElement('div');
-      el.className = 'player';
-      el.textContent = data.name + " (" + (data.score||0) + " P.)";
-      if(data.team==="rot"){ 
-        redDiv.appendChild(el); 
-        redScore += data.score||0; 
-        redCount++;
-      } else { 
-        blueDiv.appendChild(el); 
-        blueScore += data.score||0; 
-        blueCount++;
-      }
-    });
-
-    // Gesamtpunkte aktualisieren
-    redDiv.querySelector('.totalPoints').textContent = redScore + " P.";
-    blueDiv.querySelector('.totalPoints').textContent = blueScore + " P.";
-
-    // Spieleranzahl in Teamnamen aktualisieren
-    document.getElementById('redTeamTitle').textContent = "Rotes Team (" + redCount + ")";
-    document.getElementById('blueTeamTitle').textContent = "Blaues Team (" + blueCount + ")";
+  allPlayers.forEach(p=>{
+    const div=document.createElement('div');
+    div.className='playerItem';
+    div.textContent=p.name+" – "+(p.score||0)+" P";
+    if(p.team==="rot"){redBox.querySelector('.playersList').appendChild(div);redCount++;redPoints+=(p.score||0);}
+    else{blueBox.querySelector('.playersList').appendChild(div);blueCount++;bluePoints+=(p.score||0);}
   });
-}
-setInterval(updateLobbyAndScores,2000);
 
-// Quiz starten
-document.getElementById('startBtn').addEventListener('click', ()=>{
-  gameState.set({currentQuestion:0, started:true});
-  startQuizTimer(15*10); // Beispiel: 10 Fragen à 15s
+  redBox.querySelector('h2').textContent=`Rotes Team (${redCount}) – ${redPoints} P`;
+  blueBox.querySelector('h2').textContent=`Blaues Team (${blueCount}) – ${bluePoints} P`;
+}
+
+// Start Quiz
+document.getElementById('startBtn').addEventListener('click', () => {
+  document.getElementById('countdownOverlay').style.display='flex';
+  let cd=countdownVal;
+  document.getElementById('countdownOverlay').textContent=cd;
+  const interval=setInterval(()=>{
+    cd--;
+    document.getElementById('countdownOverlay').textContent=cd>0?cd:'Start!';
+    if(cd<0){
+      clearInterval(interval);
+      document.getElementById('countdownOverlay').style.display='none';
+      gameState.set({started:true,currentQuestionIndex:0,gameReset:false});
+    }
+  },1000);
 });
 
-// Gesamt-Timer
-function startQuizTimer(totalSeconds){
-  quizTotalTime = totalSeconds;
-  clearInterval(quizTimerInterval);
-  quizTimerInterval = setInterval(()=>{
-    if(quizTotalTime<=0){ 
-      clearInterval(quizTimerInterval);
-      document.getElementById('timer').textContent="Ende";
-      return; 
-    }
-    quizTotalTime--;
-    document.getElementById('timer').textContent = "Restzeit: "+quizTotalTime+" s";
-  },1000);
-}
-
-// Reset Button
-document.getElementById('resetBtn').addEventListener('click', async ()=>{
-  if(confirm("Willst du wirklich das Quiz zurücksetzen und alle Teilnehmer löschen?")){
-    const snapshot = await playersCol.get();
-    snapshot.forEach(doc => doc.ref.delete());
-    gameState.set({currentQuestion:0, started:false});
-    clearInterval(quizTimerInterval);
-    document.getElementById('timer').textContent="Restzeit: 0 s";
-    alert("Quiz wurde zurückgesetzt.");
-  }
+// Reset Quiz
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  if(!confirm("Willst du wirklich zurücksetzen? Alle Spieler werden entfernt.")) return;
+  const snap=await playersCol.get();
+  const batch=db.batch();
+  snap.forEach(doc=>batch.delete(doc.ref));
+  await batch.commit();
+  await gameState.set({started:false,currentQuestionIndex:0,gameReset:true});
+  allPlayers=[];
+  renderTeams();
+  alert("Spiel zurückgesetzt. Alle Spieler zur Anmeldung zurückgeschickt.");
 });
 </script>
 </body>
