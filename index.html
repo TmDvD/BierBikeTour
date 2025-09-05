@@ -215,11 +215,16 @@ gameState.onSnapshot(doc=>{
   }
 
   if(data.started){
-    // Countdown nur anzeigen, wenn angemeldeter Spieler
     if(currentPlayerId){
+      // Angemeldeter Spieler → Countdown und Hinweis
+      document.getElementById("waitingArea").style.display="block";
+      document.getElementById("waitingArea").innerHTML = `
+        <img id="waitingLogo" src="Bilder/logo_lightmode.png" alt="Logo">
+        <p>Das Spiel wird gleich durch den Admin gestartet…</p>
+      `;
       startCountdown(5);
     } else {
-      // Nicht angemeldete Spieler sehen Hinweis
+      // Nicht angemeldeter Spieler → Spiel läuft
       document.getElementById("joinArea").style.display="none";
       document.getElementById("waitingArea").style.display="block";
       document.getElementById("waitingArea").innerHTML = `
