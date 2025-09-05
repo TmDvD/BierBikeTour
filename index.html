@@ -42,6 +42,7 @@
       cursor: pointer;
       color: white;
       border: 2px solid transparent;
+      transition: all 0.2s;
     }
     .teamBtn.red { background: #d9534f; }
     .teamBtn.blue { background: #0275d8; }
@@ -106,9 +107,9 @@ function setLogo(){
 setLogo();
 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setLogo);
 
-// Blockieren, wenn Spiel läuft
+// Spieler blockieren, wenn Spiel läuft
 gameState.get().then(doc=>{
-  const data=doc.data();
+  const data = doc.data();
   if(data && data.started){
     document.getElementById("joinArea").innerHTML="<h2>Es läuft gerade ein Spiel – bitte warten bis zum nächsten!</h2>";
   }
@@ -152,10 +153,11 @@ document.getElementById("joinBtn").addEventListener("click", async ()=>{
   document.getElementById("waitingArea").style.display="block";
 });
 
-// Zurücksetzen Event -> Spieler raus
-gameState.onSnapshot(doc=>{
-  const data=doc.data();
+// Zurücksetzen Event -> Spieler raus (einmalig)
+gameState.onSnapshot(async doc=>{
+  const data = doc.data();
   if(data && data.gameReset){
+    await gameState.set({gameReset:false},{merge:true});
     location.reload();
   }
 });
