@@ -1,68 +1,69 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Bierbike Quiz</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: #f9f9f9;
-    }
-    #joinArea, #waitingArea {
-      text-align: center;
-      width: 90%;
-      max-width: 400px;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 1em;
-      box-sizing: border-box;
-    }
-    .teamChoice {
-      display: flex;
-      justify-content: space-around;
-      margin: 15px 0;
-    }
-    .teamBtn {
-      flex: 0 0 45%;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 1.1em;
-      font-weight: bold;
-      cursor: pointer;
-      color: white;
-      border: 2px solid transparent;
-      transition: all 0.2s;
-    }
-    .teamBtn.red { background: #d9534f; }
-    .teamBtn.blue { background: #0275d8; }
-    .teamBtn.disabled { opacity: 0.4; pointer-events: none; }
-    .teamBtn.active { border: 3px solid #333; opacity: 1; }
-    button {
-      width: 100%;
-      padding: 12px;
-      font-size: 1.1em;
-      border-radius: 8px;
-      border: none;
-      background: #28a745;
-      color: white;
-      margin-top: 10px;
-      cursor: pointer;
-    }
-    h1 { margin-bottom: 20px; }
-  </style>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<meta charset="UTF-8">
+<title>Bierbike Quiz</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+body {
+  margin: 0;
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f9f9f9;
+}
+#joinArea, #waitingArea, #countdownArea {
+  text-align: center;
+  width: 90%;
+  max-width: 400px;
+}
+input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 1em;
+  box-sizing: border-box;
+}
+.teamChoice {
+  display: flex;
+  justify-content: space-around;
+  margin: 15px 0;
+}
+.teamBtn {
+  flex: 0 0 45%;
+  padding: 15px;
+  border-radius: 10px;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  color: white;
+  border: 2px solid transparent;
+  transition: all 0.2s;
+}
+.teamBtn.red { background: #d9534f; }
+.teamBtn.blue { background: #0275d8; }
+.teamBtn.disabled { opacity: 0.4; pointer-events: none; }
+.teamBtn.active { border: 3px solid #333; opacity: 1; }
+button {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.1em;
+  border-radius: 8px;
+  border: none;
+  background: #28a745;
+  color: white;
+  margin-top: 10px;
+  cursor: pointer;
+}
+h1 { margin-bottom: 20px; }
+#countdownArea { display:none; font-size: 2em; font-weight:bold; }
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -81,6 +82,8 @@
   <h2>Bitte warten...</h2>
   <p>Das Spiel startet gleich.</p>
 </div>
+
+<div id="countdownArea"></div>
 
 <script>
 const firebaseConfig = {
@@ -156,9 +159,35 @@ document.getElementById("joinBtn").addEventListener("click", async ()=>{
 // Zurücksetzen Event -> Spieler raus (einmalig)
 gameState.onSnapshot(async doc=>{
   const data = doc.data();
-  if(data && data.gameReset){
+  if(!data) return;
+
+  // Spieler neu laden nach Reset
+  if(data.gameReset){
     await gameState.set({gameReset:false},{merge:true});
     location.reload();
+  }
+
+  // Start Event
+  if(data.started && !data.countdownStarted){
+    // Countdown 5 Sekunden
+    document.getElementById("waitingArea").style.display="none";
+    document.getElementById("countdownArea").style.display="block";
+    let sec=5;
+    const countdownDiv = document.getElementById("countdownArea");
+    const interval = setInterval(()=>{
+      countdownDiv.innerText=sec;
+      // Farbe von grün nach rot
+      countdownDiv.style.color = `rgb(${Math.floor(255*(5-sec)/5)},${Math.floor(255*sec/5)},0)`;
+      sec--;
+      if(sec<0){
+        clearInterval(interval);
+        countdownDiv.style.display="none";
+        // Hier könnte Quiz gestartet werden
+        document.body.innerHTML = "<h1>Quiz gestartet!</h1>";
+      }
+    },1000);
+    // Setze CountdownFlag um nicht erneut zu starten
+    await gameState.set({countdownStarted:true},{merge:true});
   }
 });
 </script>
