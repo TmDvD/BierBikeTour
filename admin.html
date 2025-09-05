@@ -128,11 +128,11 @@ body {
 
   <div id="teamsContainer">
     <div id="redTeam" class="teamColumn">
-      <h3>Rotes Team</h3>
+      <h3 id="redTeamTitle">Rotes Team (0)</h3>
       <div class="totalPoints">0 P.</div>
     </div>
     <div id="blueTeam" class="teamColumn">
-      <h3>Blaues Team</h3>
+      <h3 id="blueTeamTitle">Blaues Team (0)</h3>
       <div class="totalPoints">0 P.</div>
     </div>
   </div>
@@ -159,13 +159,6 @@ const gameState = db.collection('game').doc('state');
 
 let quizTotalTime = 0;
 let quizTimerInterval;
-let questions = [
-  {category:"Allgemeinwissen", points:1},
-  {category:"Allgemeinwissen", points:2},
-  {category:"Allgemeinwissen", points:3},
-  {category:"Allgemeinwissen", points:4},
-  {category:"Allgemeinwissen", points:5},
-];
 
 // Admin Login
 document.getElementById('loginBtn').addEventListener('click', ()=>{
@@ -180,10 +173,11 @@ document.getElementById('loginBtn').addEventListener('click', ()=>{
 function updateLobbyAndScores(){
   playersCol.get().then(snapshot=>{
     let redScore=0, blueScore=0;
+    let redCount=0, blueCount=0;
     const redDiv = document.getElementById('redTeam');
     const blueDiv = document.getElementById('blueTeam');
 
-    // Reset Inhalte außer Überschrift & Gesamtpunkte
+    // Spielerlisten zurücksetzen
     redDiv.querySelectorAll('.player').forEach(e=>e.remove());
     blueDiv.querySelectorAll('.player').forEach(e=>e.remove());
 
@@ -192,12 +186,24 @@ function updateLobbyAndScores(){
       const el = document.createElement('div');
       el.className = 'player';
       el.textContent = data.name + " (" + (data.score||0) + " P.)";
-      if(data.team==="rot"){ redDiv.appendChild(el); redScore+=data.score||0; }
-      else { blueDiv.appendChild(el); blueScore+=data.score||0; }
+      if(data.team==="rot"){ 
+        redDiv.appendChild(el); 
+        redScore += data.score||0; 
+        redCount++;
+      } else { 
+        blueDiv.appendChild(el); 
+        blueScore += data.score||0; 
+        blueCount++;
+      }
     });
 
+    // Gesamtpunkte aktualisieren
     redDiv.querySelector('.totalPoints').textContent = redScore + " P.";
     blueDiv.querySelector('.totalPoints').textContent = blueScore + " P.";
+
+    // Spieleranzahl in Teamnamen aktualisieren
+    document.getElementById('redTeamTitle').textContent = "Rotes Team (" + redCount + ")";
+    document.getElementById('blueTeamTitle').textContent = "Blaues Team (" + blueCount + ")";
   });
 }
 setInterval(updateLobbyAndScores,2000);
@@ -205,7 +211,7 @@ setInterval(updateLobbyAndScores,2000);
 // Quiz starten
 document.getElementById('startBtn').addEventListener('click', ()=>{
   gameState.set({currentQuestion:0, started:true});
-  startQuizTimer(questions.length*15);
+  startQuizTimer(15*10); // Beispiel: 10 Fragen à 15s
 });
 
 // Gesamt-Timer
