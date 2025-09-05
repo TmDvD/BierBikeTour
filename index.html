@@ -20,7 +20,9 @@ body {
     max-width:500px;
     text-align:center;
 }
-h1 { margin-bottom:20px; }
+h1 {
+    margin-bottom:20px;
+}
 input, button {
     width:100%;
     padding:12px;
@@ -45,11 +47,23 @@ input, button {
     border:none;
     color:white;
 }
-.red { background:#d9534f; }
-.blue { background:#0275d8; }
-.inactive { opacity:0.4; }
-.selected { border:3px solid #000; filter:brightness(1.2); }
-#waitingArea img { max-width:200px; margin-top:40px; }
+.red {
+    background:#d9534f;
+}
+.blue {
+    background:#0275d8;
+}
+.inactive {
+    opacity:0.4;
+}
+.selected {
+    border:3px solid #000;
+    filter:brightness(1.2);
+}
+#waitingArea img {
+    max-width:200px;
+    margin-top:40px;
+}
 #questionHeader {
     background:#b2ebf2;
     padding:10px;
@@ -58,13 +72,17 @@ input, button {
     justify-content:space-between;
     align-items:center;
     margin-bottom:10px;
-    color:#000; /* Header-Schrift Lightmode */
 }
-@media (prefers-color-scheme: dark) {
-    #questionHeader { color: #fff; }
+#playerScore {
+    font-size:1.2em;
+    margin-bottom:10px;
+    position:relative;
 }
-#playerScore { font-size:1.2em; margin-bottom:10px; position:relative; }
-#timer { font-size:1.5em; margin:10px 0; font-weight:bold; }
+#timer {
+    font-size:1.5em;
+    margin:10px 0;
+    font-weight:bold;
+}
 .answerBtn {
     width:100%;
     min-height:60px;
@@ -76,8 +94,12 @@ input, button {
     background:#fff;
     transition:background 0.3s, transform 0.3s;
 }
-.answerBtn.correct { background-color:#a2d5a2; }
-.answerBtn.wrong { background-color:#f4a2a2; }
+.answerBtn.correct {
+    background-color:#a2d5a2;
+}
+.answerBtn.wrong {
+    background-color:#f4a2a2;
+}
 #countdownOverlay {
     position:fixed;
     top:20%;
@@ -154,7 +176,7 @@ let currentQuestionIndex = 0;
 let questionTimer;
 const questionDuration = 15;
 
-// Darkmode Logo
+// Darkmode
 if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
     document.getElementById("logo").src="Bilder/logo_darkmode.png";
     document.getElementById("waitingLogo").src="Bilder/logo_darkmode.png";
@@ -163,6 +185,7 @@ if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matche
 // Team-Auswahl
 document.getElementById("redBtn").addEventListener("click", ()=>selectTeam("rot"));
 document.getElementById("blueBtn").addEventListener("click", ()=>selectTeam("blau"));
+
 function selectTeam(team){
     selectedTeam=team;
     document.getElementById("redBtn").classList.remove("selected","inactive");
@@ -176,7 +199,7 @@ function selectTeam(team){
     }
 }
 
-// Fragen
+// Fragen und Kategorien
 let questionCategories=[
     { category:"Geografie", questions:[
         {text:"Welche Stadt ist die Hauptstadt von Frankreich?", answers:[{text:"Rom",correct:false},{text:"Berlin",correct:false},{text:"Paris",correct:true},{text:"Madrid",correct:false}]},
@@ -252,15 +275,33 @@ function showQuestion(){
     clearInterval(questionTimer);
     const qSet = questionCategories[currentQuestionSet];
     const q = qSet.questions[currentQuestionIndex];
-    document.getElementById("categoryName").textContent = qSet.category;
-    document.getElementById("questionPoints").textContent = (currentQuestionIndex+1) + " Punkt" + ((currentQuestionIndex+1)>1?"e":"");
+
+    const categoryEl = document.getElementById("categoryName");
+    categoryEl.textContent = qSet.category;
+
+    const colors = ["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
+    const color = colors[currentQuestionSet % colors.length];
+
+    // Schriftfarbe dauerhaft setzen wie beim Header
+    categoryEl.style.color = color;
+    document.getElementById("questionPoints").style.color = color;
+
+    if(currentQuestionIndex === 0) animateCategory(categoryEl, currentQuestionSet, color);
+
+    document.getElementById("questionText").textContent = q.text;
+
+    const currentPoints = currentQuestionIndex + 1;
+    document.getElementById("questionPoints").textContent = currentPoints + " Punkt" + (currentPoints>1?"e":"");
 
     const totalQuestions = questionCategories.reduce((sum, cat) => sum + cat.questions.length, 0);
     const currentGlobalIndex = questionCategories.slice(0,currentQuestionSet).reduce((sum,cat)=>sum+cat.questions.length,0) + currentQuestionIndex + 1;
-    document.getElementById("progress").textContent = currentGlobalIndex + " von " + totalQuestions;
+    const progressEl = document.getElementById("progress");
+    progressEl.textContent = currentGlobalIndex + " von " + totalQuestions;
+    progressEl.style.fontWeight = "normal";
 
     const answersDiv = document.getElementById("answers");
     answersDiv.innerHTML = "";
+
     let timeLeft = questionDuration;
     const timerEl = document.getElementById("timer");
     timerEl.textContent = timeLeft;
@@ -275,18 +316,15 @@ function showQuestion(){
         btn.textContent=a.text;
         btn.className="answerBtn";
         btn.dataset.correct=a.correct;
-        btn.onclick=()=>selectAnswer(btn,a.correct,currentQuestionIndex+1);
+        btn.onclick=()=>selectAnswer(btn,a.correct,currentPoints);
         answersDiv.appendChild(btn);
     });
-
-    // Kategorie Overlay
-    animateCategory(document.getElementById("categoryName"), currentQuestionSet);
 }
 
-function animateCategory(categoryEl, categoryIndex){
-    const colors = ["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
-    const color = colors[categoryIndex % colors.length];
-    document.getElementById("questionHeader").style.background = color;
+// Kategorie animieren (Overlay nur für Animation, Farbe von categoryEl bleibt)
+function animateCategory(categoryEl, categoryIndex, color){
+    const questionHeader = document.getElementById("questionHeader");
+    questionHeader.style.background = color;
 
     const overlay = document.createElement("div");
     overlay.textContent = categoryEl.textContent;
@@ -305,12 +343,14 @@ function animateCategory(categoryEl, categoryIndex){
     overlay.style.textAlign = "center";
     overlay.style.transition = "transform 0.3s";
     document.body.appendChild(overlay);
+
     setTimeout(()=>{
         overlay.style.transform = "translate(-50%,-50%) scale(1)";
         setTimeout(()=>{ overlay.remove(); },3000);
     },10);
 }
 
+// Antworten und Punkteanimation
 function selectAnswer(btn,correct,currentPoints){
     clearInterval(questionTimer);
     const buttons=document.querySelectorAll(".answerBtn");
@@ -337,6 +377,7 @@ function autoNextQuestion(){
     showQuestion();
 }
 
+// Gesamtpunkteanimation
 function animateScore(points){
     const scoreEl=document.getElementById("playerScore");
     scoreEl.textContent="Punkte: "+score;
