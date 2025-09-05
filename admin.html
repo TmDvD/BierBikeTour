@@ -18,31 +18,67 @@ body {
   align-items: center;
   background: #fafafa;
 }
+h1,h2 {
+  margin: 5px 0;
+  text-align: center;
+}
 #passwordPrompt, #adminArea {
   width: 90%;
   margin-top: 20px;
 }
-.teamColumn {
+.adminInput {
   width: 100%;
+  padding: 15px;
+  font-size: 1.2em;
+  margin-top: 10px;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+#header {
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+  position: sticky;
+  top: 0;
+  background:#fafafa;
+  z-index: 100;
+}
+#timer {
+  font-size: 2em;
+  font-weight: bold;
+  text-align: center;
+  margin: 10px 0;
+}
+#teamsContainer {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  margin: 10px 0;
+}
+.teamColumn {
+  width: 45%;
   background:#eee;
   padding:10px;
   border-radius:5px;
-  margin-bottom:10px;
 }
 #redTeam { background:#f88; }
 #blueTeam { background:#ccf; }
+.teamColumn h3 {
+  margin: 0 0 5px 0;
+  text-align: center;
+}
+#adminControls {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
 #adminControls button {
   width: 100%;
   padding: 15px;
-  margin-top: 5px;
   font-size:1.1em;
   border-radius: 8px;
-}
-#quizTimer {
-  font-size: 1.5em;
-  margin-top:10px;
-  font-weight:bold;
-  text-align:center;
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -51,26 +87,29 @@ body {
 <body>
 
 <div id="passwordPrompt">
-  <h2>Admin Login</h2>
-  <input type="password" id="adminPass" placeholder="Passwort" style="width:100%; padding:8px; font-size:1em;">
-  <button id="loginBtn">Login</button>
+  <input type="password" id="adminPass" placeholder="Passwort" class="adminInput">
+  <button id="loginBtn" class="adminInput">Login</button>
 </div>
 
 <div id="adminArea" style="display:none;">
-  <h1>Bierbike Quiz – Admin</h1>
-
-  <div id="teamScores">
-    <div>Rotes Team: <span id="redScore">0</span></div>
-    <div>Blaues Team: <span id="blueScore">0</span></div>
+  <div id="header">
+    <h1>Bierbike Quiz</h1>
+    <h2>Admin</h2>
+    <div id="timer">Restzeit: 0 s</div>
   </div>
 
-  <div id="redTeam" class="teamColumn"><h3>Rotes Team</h3></div>
-  <div id="blueTeam" class="teamColumn"><h3>Blaues Team</h3></div>
+  <div id="teamsContainer">
+    <div id="redTeam" class="teamColumn">
+      <h3>Rotes Team</h3>
+    </div>
+    <div id="blueTeam" class="teamColumn">
+      <h3>Blaues Team</h3>
+    </div>
+  </div>
 
   <div id="adminControls">
     <button id="startBtn">Quiz starten</button>
     <button id="resetBtn">Quiz zurücksetzen</button>
-    <div id="quizTimer">Restzeit: 0 s</div>
   </div>
 </div>
 
@@ -118,12 +157,11 @@ function updateLobbyAndScores(){
     snapshot.forEach(doc=>{
       const data = doc.data();
       const el = document.createElement('div');
-      el.textContent = data.name + " (" + data.score + " Punkte)";
+      el.textContent = data.name + " (" + (data.score||0) + " P.)";
       if(data.team==="rot"){ redDiv.appendChild(el); redScore+=data.score||0; }
-      else { blueDiv.appendChild(el); blueScore+=data.score||0; }
+      else { blueDiv.appendChild(el); blueDiv.appendChild(el); blueScore+=data.score||0; }
     });
-    document.getElementById('redScore').textContent=redScore;
-    document.getElementById('blueScore').textContent=blueScore;
+    // Optional: Gesamtpunkte auch im Teamkopf anzeigen
   });
 }
 setInterval(updateLobbyAndScores,2000);
@@ -141,7 +179,7 @@ function startQuizTimer(totalSeconds){
   quizTimerInterval = setInterval(()=>{
     if(quizTotalTime<=0){ clearInterval(quizTimerInterval); return; }
     quizTotalTime--;
-    document.getElementById('quizTimer').textContent = "Restzeit: "+quizTotalTime+" s";
+    document.getElementById('timer').textContent = "Restzeit: "+quizTotalTime+" s";
   },1000);
 }
 
@@ -152,7 +190,7 @@ document.getElementById('resetBtn').addEventListener('click', async ()=>{
     snapshot.forEach(doc => doc.ref.delete());
     gameState.set({currentQuestion:0, started:false});
     clearInterval(quizTimerInterval);
-    document.getElementById('quizTimer').textContent="Restzeit: 0 s";
+    document.getElementById('timer').textContent="Restzeit: 0 s";
     alert("Quiz wurde zurückgesetzt.");
   }
 });
