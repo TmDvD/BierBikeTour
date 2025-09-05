@@ -240,19 +240,38 @@ function showQuestion(){
   });
 }
 
-// Kategorie animieren
+// Kategorie animieren (mittig)
 function animateCategory(categoryEl, categoryIndex){
   const colors = ["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
   const color = colors[categoryIndex % colors.length];
 
-  categoryEl.style.transition = "transform 0.3s, border 0.3s";
-  categoryEl.style.border = "4px solid " + color;
-  categoryEl.style.transform = "scale(1.5)";
-  
+  const overlay = document.createElement("div");
+  overlay.textContent = categoryEl.textContent;
+  overlay.style.position = "fixed";
+  overlay.style.top = "50%";
+  overlay.style.left = "50%";
+  overlay.style.transform = "translate(-50%,-50%) scale(1.5)";
+  overlay.style.padding = "20px 40px";
+  overlay.style.background = color;
+  overlay.style.color = "#fff";
+  overlay.style.fontSize = "2em";
+  overlay.style.fontWeight = "bold";
+  overlay.style.borderRadius = "8px";
+  overlay.style.zIndex = "2000";
+  overlay.style.boxShadow = "0 0 20px rgba(0,0,0,0.5)";
+  overlay.style.textAlign = "center";
+  overlay.style.transition = "transform 0.3s";
+
+  document.body.appendChild(overlay);
+
   setTimeout(()=>{
-    categoryEl.style.transform = "scale(1)";
-    categoryEl.style.border = "none";
-  },2000);
+    overlay.style.transform = "translate(-50%,-50%) scale(1)";
+    setTimeout(()=>{
+      overlay.remove();
+      categoryEl.style.border = "4px solid " + color;
+      setTimeout(()=>categoryEl.style.border="none",500);
+    },2000);
+  },10);
 }
 
 // Antwort auswählen
