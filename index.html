@@ -5,7 +5,7 @@
 <title>Bierbike-Quiz</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
-body { margin:0; font-family:sans-serif; background:#f4f4f4; display:flex; justify-content:center; align-items:center; min-height:100vh;}
+body { margin:0; font-family:sans-serif; background:#f4f4f4; display:flex; justify-content:center; align-items:center; min-height:100vh; position:relative;}
 #joinArea, #waitingArea, #quizArea { width:90%; max-width:500px; text-align:center;}
 h1 { margin-bottom:20px;}
 input, button { width:100%; padding:12px; font-size:1.1em; margin:8px 0; border-radius:8px; border:1px solid #ccc; box-sizing:border-box;}
@@ -23,6 +23,7 @@ input, button { width:100%; padding:12px; font-size:1.1em; margin:8px 0; border-
 .answerBtn.correct { background-color:#a2d5a2; }
 .answerBtn.wrong { background-color:#f4a2a2; }
 #countdownOverlay { position:fixed; top:20%; left:0; width:100%; height:60px; color:white; display:flex; justify-content:center; align-items:center; font-size:3em; display:none; z-index:1000; transition: color 0.5s ease;}
+#progress { position:fixed; bottom:10px; width:100%; text-align:center; font-weight:bold; font-size:1.1em; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -57,6 +58,7 @@ input, button { width:100%; padding:12px; font-size:1.1em; margin:8px 0; border-
 </div>
 
 <div id="countdownOverlay">5</div>
+<div id="progress"></div>
 
 <script>
 const firebaseConfig = {
@@ -81,9 +83,9 @@ let questionTimer;
 const questionDuration = 15;
 
 // Darkmode
-if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-  document.getElementById("logo").src = "Bilder/logo_darkmode.png";
-  document.getElementById("waitingLogo").src = "Bilder/logo_darkmode.png";
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+  document.getElementById("logo").src="Bilder/logo_darkmode.png";
+  document.getElementById("waitingLogo").src="Bilder/logo_darkmode.png";
 }
 
 // Team-Auswahl
@@ -103,7 +105,7 @@ function selectTeam(team){
 }
 
 // Fragen und Kategorien
-let questionCategories = [
+let questionCategories=[
   {
     category:"Geografie",
     questions:[
@@ -125,12 +127,10 @@ let questionCategories = [
     ]
   }
 ];
-
-// Kategorien zufällig mischen
 questionCategories = questionCategories.sort(()=>Math.random()-0.5);
 
 // Spieler beitreten
-document.getElementById("joinBtn").addEventListener("click",async()=>{
+document.getElementById("joinBtn").addEventListener("click", async ()=>{
   const name=document.getElementById("playerName").value.trim();
   if(!name||name.length>10){ alert("Ungültiger Name (max 10 Zeichen)!"); return; }
   if(!selectedTeam){ alert("Bitte Team wählen!"); return; }
@@ -139,10 +139,7 @@ document.getElementById("joinBtn").addEventListener("click",async()=>{
   if(!existing.empty){ alert("Name schon vergeben!"); return; }
 
   const gameDoc=await gameState.get();
-  if(gameDoc.exists && gameDoc.data().started){
-    alert("Ein Spiel läuft gerade. Du kannst nicht beitreten!");
-    return;
-  }
+  if(gameDoc.exists && gameDoc.data().started){ alert("Ein Spiel läuft gerade. Du kannst nicht beitreten!"); return; }
 
   const docRef=await playersCol.add({name,team:selectedTeam,score:0});
   currentPlayerId=docRef.id;
@@ -151,26 +148,18 @@ document.getElementById("joinBtn").addEventListener("click",async()=>{
   document.getElementById("waitingMessage").textContent="Das Spiel wird gleich durch den Admin gestartet…";
 });
 
-// Prüfen beim Laden, ob Spiel läuft
+// GameState Listener
 gameState.onSnapshot(doc=>{
   const data=doc.data();
-  if(data && data.started && !currentPlayerId){
-    document.getElementById("joinArea").style.display="none";
-    document.getElementById("waitingArea").style.display="block";
-    document.getElementById("waitingMessage").textContent="Ein Spiel läuft gerade. Du kannst nicht beitreten!";
-  }
-  if(data && data.started && currentPlayerId){
-    startCountdown(5);
-  }
-  if(data && data.gameReset){
+  if(!data) return;
+  if(data.started && currentPlayerId){ startCountdown(5); }
+  if(data.gameReset){
     document.getElementById("quizArea").style.display="none";
     document.getElementById("waitingArea").style.display="none";
     document.getElementById("joinArea").style.display="block";
     document.getElementById("playerName").value="";
     selectedTeam=null;
-    score=0;
-    currentQuestionIndex=0;
-    currentQuestionSet=0;
+    score=0; currentQuestionIndex=0; currentQuestionSet=0;
     if(currentPlayerId){ playersCol.doc(currentPlayerId).delete(); currentPlayerId=null; }
     gameState.update({gameReset:false});
   }
@@ -189,92 +178,89 @@ function startCountdown(sec){
     c--; idx++;
     if(idx<colors.length) overlay.style.color=colors[idx];
     overlay.textContent=c>0?c:"Start!";
-    if(c<0){
-      clearInterval(int);
-      overlay.style.display="none";
-      document.getElementById("waitingArea").style.display="none";
-      document.getElementById("quizArea").style.display="block";
-      showQuestion();
-    }
+    if(c<0){ clearInterval(int); overlay.style.display="none"; document.getElementById("waitingArea").style.display="none"; document.getElementById("quizArea").style.display="block"; showQuestion(); }
   },1000);
 }
 
 // Frage anzeigen
 function showQuestion(){
   clearInterval(questionTimer);
-  const qSet = questionCategories[currentQuestionSet];
-  const q = qSet.questions[currentQuestionIndex];
+  const qSet=questionCategories[currentQuestionSet];
+  const q=qSet.questions[currentQuestionIndex];
 
-  const categoryEl = document.getElementById("categoryName");
-  categoryEl.textContent = qSet.category;
+  const categoryEl=document.getElementById("categoryName");
+  categoryEl.textContent=qSet.category;
 
-  // Kategorieanimation nur zu Beginn der Kategorie
-  if(currentQuestionIndex === 0){
-    animateCategory(categoryEl, currentQuestionSet);
-  }
+  if(currentQuestionIndex===0) animateCategory(categoryEl,currentQuestionSet);
 
-  document.getElementById("questionText").textContent = q.text;
+  document.getElementById("questionText").textContent=q.text;
 
-  const currentPoints = currentQuestionIndex + 1;
-  document.getElementById("questionPoints").textContent = currentPoints + " Punkt" + (currentPoints>1?"e":"");
+  const currentPoints = currentQuestionIndex+1;
+  document.getElementById("questionPoints").textContent=currentPoints+" Punkt"+(currentPoints>1?"e":"");
 
-  const answersDiv = document.getElementById("answers");
-  answersDiv.innerHTML = "";
+  // Fortschritt unten
+  document.getElementById("progress").textContent = (currentQuestionIndex+1) + " von " + qSet.questions.length;
 
-  let timeLeft = questionDuration;
-  const timerEl = document.getElementById("timer");
-  timerEl.textContent = timeLeft;
-  questionTimer = setInterval(()=>{
+  const answersDiv=document.getElementById("answers");
+  answersDiv.innerHTML="";
+
+  let timeLeft=questionDuration;
+  const timerEl=document.getElementById("timer");
+  timerEl.textContent=timeLeft;
+  questionTimer=setInterval(()=>{
     timeLeft--;
-    timerEl.textContent = timeLeft;
-    if(timeLeft <= 0){ clearInterval(questionTimer); autoNextQuestion(); }
+    timerEl.textContent=timeLeft;
+    if(timeLeft<=0){ clearInterval(questionTimer); autoNextQuestion(); }
   },1000);
 
   q.answers.forEach(a=>{
-    const btn = document.createElement("button");
-    btn.textContent = a.text;
-    btn.className = "answerBtn";
-    btn.dataset.correct = a.correct;
-    btn.onclick = ()=>selectAnswer(btn, a.correct, currentPoints);
+    const btn=document.createElement("button");
+    btn.textContent=a.text;
+    btn.className="answerBtn";
+    btn.dataset.correct=a.correct;
+    btn.onclick=()=>selectAnswer(btn,a.correct,currentPoints);
     answersDiv.appendChild(btn);
   });
 }
 
-// Kategorie animieren (mittig)
-function animateCategory(categoryEl, categoryIndex){
-  const colors = ["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
-  const color = colors[categoryIndex % colors.length];
+// Kategorie animieren (mittig) 3 Sekunden
+function animateCategory(categoryEl,categoryIndex){
+  const colors=["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
+  const color=colors[categoryIndex % colors.length];
 
-  const overlay = document.createElement("div");
-  overlay.textContent = categoryEl.textContent;
-  overlay.style.position = "fixed";
-  overlay.style.top = "50%";
-  overlay.style.left = "50%";
-  overlay.style.transform = "translate(-50%,-50%) scale(1.5)";
-  overlay.style.padding = "20px 40px";
-  overlay.style.background = color;
-  overlay.style.color = "#fff";
-  overlay.style.fontSize = "2em";
-  overlay.style.fontWeight = "bold";
-  overlay.style.borderRadius = "8px";
-  overlay.style.zIndex = "2000";
-  overlay.style.boxShadow = "0 0 20px rgba(0,0,0,0.5)";
-  overlay.style.textAlign = "center";
-  overlay.style.transition = "transform 0.3s";
+  // Balkenfarbe unter Header
+  const questionHeader=document.getElementById("questionHeader");
+  questionHeader.style.background=color;
+
+  const overlay=document.createElement("div");
+  overlay.textContent=categoryEl.textContent;
+  overlay.style.position="fixed";
+  overlay.style.top="50%";
+  overlay.style.left="50%";
+  overlay.style.transform="translate(-50%,-50%) scale(1.5)";
+  overlay.style.padding="20px 40px";
+  overlay.style.background=color;
+  overlay.style.color="#fff";
+  overlay.style.fontSize="2em";
+  overlay.style.fontWeight="bold";
+  overlay.style.borderRadius="8px";
+  overlay.style.zIndex="2000";
+  overlay.style.boxShadow="0 0 20px rgba(0,0,0,0.5)";
+  overlay.style.textAlign="center";
+  overlay.style.transition="transform 0.3s";
 
   document.body.appendChild(overlay);
 
   setTimeout(()=>{
-    overlay.style.transform = "translate(-50%,-50%) scale(1)";
+    overlay.style.transform="translate(-50%,-50%) scale(1)";
     setTimeout(()=>{
       overlay.remove();
-      categoryEl.style.border = "4px solid " + color;
-      setTimeout(()=>categoryEl.style.border="none",500);
-    },2000);
+      categoryEl.style.border="none";
+    },3000);
   },10);
 }
 
-// Antwort auswählen
+// Antworten und Punkteanimation
 function selectAnswer(btn,correct,currentPoints){
   clearInterval(questionTimer);
   const buttons=document.querySelectorAll(".answerBtn");
@@ -282,17 +268,14 @@ function selectAnswer(btn,correct,currentPoints){
     b.disabled=true;
     if(b.dataset.correct==="true") b.classList.add("correct");
   });
-
   if(correct){
     btn.classList.add("correct");
     score+=currentPoints;
     animateScore(currentPoints);
   } else btn.classList.add("wrong");
-
   setTimeout(autoNextQuestion,1000);
 }
 
-// Nächste Frage automatisch
 function autoNextQuestion(){
   currentQuestionIndex++;
   const qSet=questionCategories[currentQuestionSet];
@@ -307,7 +290,7 @@ function autoNextQuestion(){
   showQuestion();
 }
 
-// Animation Gesamtpunkte
+// Gesamtpunkteanimation
 function animateScore(points){
   const scoreEl=document.getElementById("playerScore");
   scoreEl.textContent="Punkte: "+score;
