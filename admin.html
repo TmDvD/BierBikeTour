@@ -42,23 +42,27 @@ input, button {
   color: white;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
 }
 .teamBox.red { background: #d9534f; }
 .teamBox.blue { background: #0275d8; }
+.teamHeader {
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.teamTotal {
+  font-size: 1.1em;
+  margin-bottom: 5px;
+}
 .player {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 100%;
   padding: 0 10px;
   margin: 5px 0;
   border-radius: 6px;
   background: rgba(255,255,255,0.2);
   height: 50px;
-}
-.player .score {
-  font-weight: bold;
 }
 #controlButtons {
   margin-top: 20px;
@@ -101,10 +105,12 @@ input, button {
   <div id="teamContainer">
     <div class="teamBox red">
       <div class="teamHeader">Rotes Team (<span id="redCount">0</span>)</div>
+      <div class="teamTotal" id="redTotal">Gesamt: 0 P.</div>
       <div id="redTeam"></div>
     </div>
     <div class="teamBox blue">
       <div class="teamHeader">Blaues Team (<span id="blueCount">0</span>)</div>
+      <div class="teamTotal" id="blueTotal">Gesamt: 0 P.</div>
       <div id="blueTeam"></div>
     </div>
   </div>
@@ -142,17 +148,20 @@ document.getElementById("loginBtn").addEventListener("click", ()=>{
 playersCol.onSnapshot(snapshot=>{
   let redHTML="", blueHTML="";
   let redCount=0, blueCount=0;
+  let redSum=0, blueSum=0;
   snapshot.forEach(doc=>{
     const p=doc.data();
     const score=p.score||0;
     const entry=`<div class="player"><span>${p.name}</span><span class="score">${score} P.</span></div>`;
-    if(p.team==="rot"){redHTML+=entry; redCount++;}
-    else if(p.team==="blau"){blueHTML+=entry; blueCount++;}
+    if(p.team==="rot"){redHTML+=entry; redCount++; redSum+=score;}
+    else if(p.team==="blau"){blueHTML+=entry; blueCount++; blueSum+=score;}
   });
   document.getElementById("redTeam").innerHTML=redHTML;
   document.getElementById("blueTeam").innerHTML=blueHTML;
   document.getElementById("redCount").innerText=redCount;
   document.getElementById("blueCount").innerText=blueCount;
+  document.getElementById("redTotal").innerText = "Gesamt: " + redSum + " P.";
+  document.getElementById("blueTotal").innerText = "Gesamt: " + blueSum + " P.";
 });
 
 // Start Quiz
