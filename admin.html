@@ -1,46 +1,25 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Quiz Host</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-  <style>
-    body { font-family:sans-serif; background:#f3f3f3; padding:20px; }
-    h1 { text-align:center; }
-    #timer { font-size:28px; font-weight:bold; text-align:center; margin-bottom:20px; }
-    .teams { display:flex; justify-content:space-between; margin-bottom:20px; }
-    .team { width:48%; background:white; border-radius:10px; padding:10px; box-shadow:0 4px 8px rgba(0,0,0,0.1); }
-    .team h2 { margin-top:0; text-align:center; }
-    ul { list-style:none; padding-left:0; }
-    li { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #eee; }
-    button { padding:10px 15px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; margin-bottom:10px; }
-    .green { background:#43a047; color:white; }
-    #results { margin-top:20px; background:white; padding:10px; border-radius:8px; box-shadow:0 4px 8px rgba(0,0,0,0.1); }
-  </style>
+<meta charset="UTF-8">
+<title>Admin</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <h1>Quiz Host-Lobby</h1>
-  <div id="timer">Gesamtzeit: --:--</div>
-
-  <div class="teams">
-    <div class="team" id="redTeamContainer">
-      <h2>Team Rot (<span id="redCount">0</span>)</h2>
-      <ul id="redTeam"></ul>
-    </div>
-    <div class="team" id="blueTeamContainer">
-      <h2>Team Blau (<span id="blueCount">0</span>)</h2>
-      <ul id="blueTeam"></ul>
-    </div>
-  </div>
-
-  <button class="green" onclick="startQuiz()">Quiz starten</button>
-  <p id="status"></p>
-
-  <div id="results"></div>
-
-  <script>
-    // 🔑 Firebase Config
+<h1>Bierbike Quiz – Admin</h1>
+<div id="teamsLobby">
+<h2>Teams</h2>
+<div id="redTeam"></div>
+<div id="blueTeam"></div>
+</div>
+<div id="currentQuestion"></div>
+<div id="startQuiz">
+<button id="startBtn">Quiz starten</button>
+</div>
+<script src="js/quiz.js"></script>
+<script>
 	const firebaseConfig = {
 	  apiKey: "AIzaSyDS2CTzFC_G-dTi-LE5umuvTWET4plsGH0",
 	  authDomain: "as-fensterbau-baf6c.firebaseapp.com",
@@ -49,97 +28,8 @@
 	  messagingSenderId: "25696521871",
 	  appId: "1:25696521871:web:35cca5b0e39f88c4576afa"
 	};
-
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    const redTeamEl = document.getElementById("redTeam");
-    const blueTeamEl = document.getElementById("blueTeam");
-    const redCountEl = document.getElementById("redCount");
-    const blueCountEl = document.getElementById("blueCount");
-    const statusEl = document.getElementById("status");
-    const resultsEl = document.getElementById("results");
-    const timerEl = document.getElementById("timer");
-
-    let players = [];
-
-    // 🔄 Spieler-Liste beobachten
-    db.collection("players").onSnapshot(snapshot=>{
-      players = [];
-      redTeamEl.innerHTML = "";
-      blueTeamEl.innerHTML = "";
-      snapshot.forEach(doc=>{
-        const data = doc.data();
-        const li = document.createElement("li");
-        li.innerHTML = `<span>${data.name}</span> <span id="q-${doc.id}">Frage: ${data.currentQuestion || 0}</span>`;
-        players.push({...data, id: doc.id});
-        if(data.team === "rot") redTeamEl.appendChild(li);
-        else blueTeamEl.appendChild(li);
-      });
-      redCountEl.innerText = players.filter(p=>p.team==="rot").length;
-      blueCountEl.innerText = players.filter(p=>p.team==="blau").length;
-    });
-
-    // 🔘 Quiz starten
-    async function startQuiz(){
-      // Gesamtquizzeit = 15s * Anzahl Fragen
-      const totalQuestions = 50; // passe hier deine Gesamtzahl an
-      const maxTime = totalQuestions * 15;
-      timerEl.innerText = `Gesamtzeit: ${formatTime(maxTime)}`;
-
-      await db.collection("game").doc("state").set({
-        status: "running",
-        currentQuestion: 0,
-        totalTime: maxTime,
-        startTime: Date.now()
-      });
-      statusEl.innerText = "Quiz gestartet!";
-      startTimer(maxTime);
-      monitorEnd();
-    }
-
-    // Timer anzeigen
-    function startTimer(seconds){
-      let remaining = seconds;
-      const interval = setInterval(()=>{
-        if(remaining <=0){ clearInterval(interval); return; }
-        timerEl.innerText = `Gesamtzeit: ${formatTime(remaining)}`;
-        remaining--;
-      },1000);
-    }
-
-    function formatTime(sec){
-      const m = Math.floor(sec/60);
-      const s = sec % 60;
-      return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-    }
-
-    // 🔹 Quiz-Ende überwachen und Punkte auswerten
-    async function monitorEnd(){
-      const gameRef = db.collection("game").doc("state");
-      gameRef.onSnapshot(async doc=>{
-        const data = doc.data();
-        if(data && data.status === "finished"){
-          const redPlayers = players.filter(p=>p.team==="rot");
-          const bluePlayers = players.filter(p=>p.team==="blau");
-          const redPoints = redPlayers.reduce((acc,p)=>acc + (p.points||0),0);
-          const bluePoints = bluePlayers.reduce((acc,p)=>acc + (p.points||0),0);
-          const redWeighted = redPoints / (redPlayers.length || 1);
-          const blueWeighted = bluePoints / (bluePlayers.length || 1);
-
-          resultsEl.innerHTML = `
-            <p>Team Rot: ${redPoints} Punkte (${redWeighted.toFixed(2)} gewichtet)</p>
-            <p>Team Blau: ${bluePoints} Punkte (${blueWeighted.toFixed(2)} gewichtet)</p>
-          `;
-        }
-
-        // aktuelle Frage pro Spieler live aktualisieren
-        players.forEach(p=>{
-          const qEl = document.getElementById(`q-${p.id}`);
-          if(qEl) qEl.innerText = `Frage: ${p.currentQuestion || 0}`;
-        });
-      });
-    }
-  </script>
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+</script>
 </body>
 </html>

@@ -1,0 +1,4 @@
+body { font-family: sans-serif; margin: 20px; }
+h1,h2 { color: #333; }
+#redTeam { float:left; width:45%; background:#f88; padding:10px; margin-right:5%; }
+#blueTeam { float:left; width:45%; background:#88f; padding:10px; }

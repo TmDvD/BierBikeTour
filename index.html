@@ -1,67 +1,15 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Quiz Anmeldung</title>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
-  <style>
-    body { font-family: sans-serif; display: flex; height: 100vh; justify-content: center; align-items: center; background: #f3f3f3; }
-    .card { background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; }
-    button { padding: 10px; margin: 5px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-    .red { background: #e53935; color: white; }
-    .blue { background: #1e88e5; color: white; }
-    .green { background: #43a047; color: white; width: 100%; margin-top: 10px; }
-  </style>
+<meta charset="UTF-8">
+<title>Bierbike Quiz</title>
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="card">
-    <h2>Quiz Anmeldung</h2>
-    <input id="nameInput" type="text" placeholder="Dein Name" style="width:100%; padding:8px; margin:10px 0;">
-    <div>
-      <button class="red" onclick="selectTeam('rot')">Team Rot</button>
-      <button class="blue" onclick="selectTeam('blau')">Team Blau</button>
-    </div>
-    <button class="green" onclick="joinGame()">Beitreten</button>
-    <p id="status"></p>
-  </div>
-
-  <script>
-    // 🔑 Firebase Config (DEINS hier einfügen)
-    const firebaseConfig = {
-      apiKey: "DEIN_API_KEY",
-      authDomain: "DEIN_PROJECT.firebaseapp.com",
-      projectId: "DEIN_PROJECT_ID",
-    };
-
-    const app = firebase.initializeApp(firebaseConfig);
-    const db = firebase.firestore();
-
-    let selectedTeam = "rot";
-
-    function selectTeam(team) {
-      selectedTeam = team;
-    }
-
-    async function joinGame() {
-      const name = document.getElementById("nameInput").value.trim();
-      if (!name) {
-        document.getElementById("status").innerText = "Bitte Name eingeben!";
-        return;
-      }
-
-      try {
-        await db.collection("players").add({
-          name,
-          team: selectedTeam,
-          points: 0,
-          answers: []
-        });
-        document.querySelector(".card").innerHTML = `<h2>Willkommen, ${name}!</h2><p>Warte, bis das Quiz startet...</p>`;
-      } catch (e) {
-        console.error("Fehler beim Speichern:", e);
-      }
-    }
-  </script>
+<h1>Bierbike Quiz</h1>
+<ul>
+<li><a href="quiz.html">Quiz spielen</a></li>
+<li><a href="admin.html">Admin Ansicht</a></li>
+</ul>
 </body>
 </html>
