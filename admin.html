@@ -1,68 +1,76 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Bierbike Quiz - Admin</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background: #f4f4f4;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-    #loginArea, #adminArea {
-      width: 95%;
-      max-width: 600px;
-      text-align: center;
-      margin-top: 30px;
-    }
-    input, button {
-      width: 100%;
-      padding: 12px;
-      font-size: 1.1em;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      box-sizing: border-box;
-    }
-    #teamContainer {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-    }
-    .teamBox {
-      flex: 0 0 48%;
-      border-radius: 10px;
-      padding: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      color: white;
-    }
-    .teamBox.red { background: #d9534f; }
-    .teamBox.blue { background: #0275d8; }
-    .player {
-      margin: 5px 0;
-      padding: 6px;
-      border-radius: 6px;
-      background: rgba(255,255,255,0.2);
-    }
-    .score { font-size: 0.9em; }
-    #controlButtons {
-      margin-top: 25px;
-      display: flex;
-      justify-content: space-between;
-    }
-    #timer {
-      font-size: 1.4em;
-      font-weight: bold;
-      margin: 10px 0;
-    }
-  </style>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<meta charset="UTF-8">
+<title>Bierbike Quiz - Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<style>
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: #f4f4f4;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+}
+#loginArea, #adminArea {
+  width: 95%;
+  max-width: 600px;
+  text-align: center;
+  margin-top: 30px;
+}
+input, button {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2em;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+#teamContainer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+.teamBox {
+  flex: 0 0 48%;
+  border-radius: 10px;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  color: white;
+}
+.teamBox.red { background: #d9534f; }
+.teamBox.blue { background: #0275d8; }
+.player {
+  margin: 5px 0;
+  padding: 8px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.2);
+  display: flex;
+  justify-content: space-between;
+}
+.player .score {
+  font-weight: bold;
+}
+#controlButtons {
+  margin-top: 25px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+#controlButtons button {
+  flex: 1;
+}
+#timer {
+  font-size: 1.6em;
+  font-weight: bold;
+  margin: 15px 0;
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -90,7 +98,7 @@
   </div>
 
   <div id="controlButtons">
-    <button id="startBtn">Start Quiz</button>
+    <button id="startBtn" style="background:#28a745;color:white;">Start Quiz</button>
     <button id="resetBtn" style="background:#d9534f;color:white;">Reset</button>
   </div>
 </div>
@@ -109,6 +117,7 @@ const db = firebase.firestore();
 const playersCol = db.collection("players");
 const gameState = db.collection("game").doc("state");
 
+// Login
 document.getElementById("loginBtn").addEventListener("click", ()=>{
   const pw=document.getElementById("adminPw").value;
   if(pw==="1557"){
@@ -124,7 +133,7 @@ playersCol.onSnapshot(snapshot=>{
   snapshot.forEach(doc=>{
     const p=doc.data();
     const score=p.score||0;
-    const entry=`<div class="player">${p.name}<div class="score">${score} P.</div></div>`;
+    const entry=`<div class="player"><span>${p.name}</span><span class="score">${score} P.</span></div>`;
     if(p.team==="rot"){redHTML+=entry; redCount++;}
     else if(p.team==="blau"){blueHTML+=entry; blueCount++;}
   });
@@ -134,32 +143,33 @@ playersCol.onSnapshot(snapshot=>{
   document.getElementById("blueCount").innerText=blueCount;
 });
 
-// Start
+// Start Quiz
 document.getElementById("startBtn").addEventListener("click", ()=>{
-  gameState.set({started:true,gameReset:false},{merge:true});
+  gameState.set({started:true, countdownStarted:false, gameReset:false},{merge:true});
 });
 
-// Reset
+// Reset Quiz
 document.getElementById("resetBtn").addEventListener("click", async ()=>{
   if(confirm("Bist du sicher? Alle Spieler werden entfernt und das Spiel zurückgesetzt.")){
     const snaps=await playersCol.get();
     snaps.forEach(doc=>doc.ref.delete());
     clearInterval(mainTimerInt);
     document.getElementById("timer").innerText="Noch nicht gestartet";
-    await gameState.set({started:false,gameReset:true},{merge:true});
+    await gameState.set({started:false,countdownStarted:false,gameReset:true},{merge:true});
   }
 });
 
 // Timer
+let mainTimerInt;
 gameState.onSnapshot(doc=>{
   const data=doc.data();
   if(!data) return;
-  if(data.started){
-    startMainTimer(600);
+  if(data.started && !data.countdownStarted){
+    startMainTimer(600); // z.B. 10 Minuten Timer
+    gameState.set({countdownStarted:true},{merge:true});
   }
 });
 
-let mainTimerInt;
 function startMainTimer(sec){
   clearInterval(mainTimerInt);
   let c=sec;
@@ -173,6 +183,7 @@ function startMainTimer(sec){
     }
   },1000);
 }
+
 function updateTimer(c){
   const min=Math.floor(c/60);
   const s=c%60;
