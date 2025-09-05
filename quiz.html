@@ -60,6 +60,9 @@ body {
   filter: brightness(1.2);
   border: 3px solid #000;
 }
+.teamOption.unselected {
+  filter: grayscale(80%);
+}
 
 /* Quizbereich */
 #quizArea {
@@ -83,6 +86,7 @@ body {
   justify-content: space-between;
   align-items: center;
   width: 90%;
+  margin-top:10px;
 }
 .category {
   font-weight: bold;
@@ -137,7 +141,7 @@ body {
 
 <!-- Anmeldemaske -->
 <div id="joinArea">
-  <input type="text" id="playerName" placeholder="Dein Name">
+  <input type="text" id="playerName" placeholder="Dein Name (max.10)" maxlength="10">
   <div id="teamSelect">
     <div class="teamOption red" data-team="rot">Rot</div>
     <div class="teamOption blue" data-team="blau">Blau</div>
@@ -174,7 +178,7 @@ let currentQ = 0;
 let timerInterval;
 let selectedTeam = null;
 
-// Beispiel-Questions mit Farben
+// Beispiel-Questions
 let questions = [
   {category:"Allgemeinwissen", color:"#f88", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
   {category:"Sport", color:"#8f8", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
@@ -184,11 +188,15 @@ let questions = [
 ];
 
 // Teamwahl
-document.querySelectorAll('.teamOption').forEach(opt=>{
+const teamOptions = document.querySelectorAll('.teamOption');
+teamOptions.forEach(opt=>{
   opt.addEventListener('click', ()=>{
-    document.querySelectorAll('.teamOption').forEach(e=>e.classList.remove('selected'));
-    opt.classList.add('selected');
     selectedTeam = opt.dataset.team;
+    teamOptions.forEach(e=>{
+      e.classList.remove('selected','unselected');
+      if(e.dataset.team !== selectedTeam) e.classList.add('unselected');
+    });
+    opt.classList.add('selected');
   });
 });
 
