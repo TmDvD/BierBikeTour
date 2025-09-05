@@ -5,138 +5,29 @@
 <title>Bierbike Quiz – Spieler</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
-}
-body {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  background: #fafafa;
-}
-
-/* Anmeldemaske mittig */
-#joinArea {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  width: 90%;
-  gap: 15px;
-}
-#joinArea img {
-  max-width: 150px;
-  margin-bottom: 15px;
-}
-#joinArea input, #joinArea button {
-  width: 100%;
-  padding: 15px;
-  font-size: 1.2em;
-  border-radius: 8px;
-  box-sizing: border-box;
-}
-
+html, body {height: 100%; margin: 0; padding: 0; font-family: sans-serif;}
+body {display: flex; flex-direction: column; justify-content: center; align-items: center; background: #fafafa;}
+/* Anmeldemaske */
+#joinArea {display:flex; flex-direction: column; justify-content:center; align-items:center; height:100%; width:90%; gap:15px;}
+#joinArea img {max-width:150px; margin-bottom:15px;}
+#joinArea input, #joinArea button {width:100%; padding:15px; font-size:1.2em; border-radius:8px; box-sizing:border-box;}
 /* Teamwahl */
-#teamSelect {
-  display: flex;
-  width: 100%;
-  justify-content: space-around;
-}
-.teamOption {
-  width: 45%;
-  padding: 15px;
-  text-align: center;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: bold;
-  color: white;
-  user-select: none;
-  transition: all 0.2s;
-}
-.teamOption.red { background: #f44; }
-.teamOption.blue { background: #44f; }
-.teamOption.selected {
-  filter: brightness(1.2);
-  border: 3px solid #000;
-}
-.teamOption.unselected {
-  filter: grayscale(80%);
-}
-
+#teamSelect {display:flex; width:100%; justify-content: space-around;}
+.teamOption {width:45%; padding:15px; text-align:center; border-radius:8px; cursor:pointer; font-weight:bold; color:white; user-select:none; transition: all 0.2s;}
+.teamOption.red { background:#f44; }
+.teamOption.blue { background:#44f; }
+.teamOption.selected { filter:brightness(1.2); border:3px solid #000; }
+.teamOption.unselected { filter:grayscale(80%); }
 /* Quizbereich */
-#quizArea {
-  width: 100%;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
-  padding: 10px;
-  display: none;
-}
-#timer {
-  font-size: 2em;
-  font-weight: bold;
-  text-align: center;
-  margin-top: 10px;
-}
-.categoryRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 90%;
-  margin-top:10px;
-}
-.category {
-  font-weight: bold;
-  color: white;
-  padding: 10px;
-  border-radius: 5px;
-  text-align: center;
-  flex:1;
-  margin-right:10px;
-}
-#pointsCircle {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background:#ddd;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-weight:bold;
-  text-align:center;
-  flex-shrink:0;
-}
-#questionText {
-  font-size: 1.2em;
-  text-align: center;
-  margin: 15px 0;
-}
-#options {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 90%;
-}
-#options div {
-  padding: 15px;
-  font-size: 1.2em;
-  border-radius: 8px;
-  text-align: center;
-  background: #eee;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.2s;
-}
-#options div:hover {
-  background: #ddd;
-}
+#quizArea {width:100%; flex:1; display:flex; flex-direction:column; justify-content:flex-start; align-items:center; padding:10px; display:none;}
+#timer {font-size:2em; font-weight:bold; text-align:center; margin-top:10px;}
+.categoryRow {display:flex; justify-content:space-between; align-items:center; width:90%; margin-top:10px;}
+.category {font-weight:bold; color:white; padding:10px; border-radius:5px; text-align:center; flex:1; margin-right:10px;}
+#pointsCircle {width:60px; height:60px; border-radius:50%; background:#ddd; display:flex; justify-content:center; align-items:center; font-weight:bold; text-align:center; flex-shrink:0;}
+#questionText {font-size:1.2em; text-align:center; margin:15px 0;}
+#options {display:flex; flex-direction:column; gap:10px; width:90%;}
+#options div {padding:15px; font-size:1.2em; border-radius:8px; text-align:center; background:#eee; cursor:pointer; user-select:none; transition:all 0.2s;}
+#options div:hover {background:#ddd;}
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -194,9 +85,17 @@ let questions = [
 ];
 
 // Light/Dark Mode Logo
-const logo = document.getElementById('logo');
-if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-  logo.src = 'Bilder/logo_darkmode.png';
+function updateLogo(){
+  const logo = document.getElementById('logo');
+  if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+    logo.src='Bilder/logo_darkmode.png';
+  } else {
+    logo.src='Bilder/logo_lightmode.png';
+  }
+}
+window.addEventListener('load', updateLogo);
+if(window.matchMedia){
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', updateLogo);
 }
 
 // Teamwahl
@@ -215,18 +114,12 @@ teamOptions.forEach(opt=>{
 // Spieler beitreten mit Namensprüfung
 document.getElementById('joinBtn').addEventListener('click', async ()=>{
   let name = document.getElementById('playerName').value.trim();
-
   if(!name) return alert("Bitte Name eingeben!");
   if(name.length > 10) name = name.slice(0,10);
   if(!selectedTeam) return alert("Bitte ein Team wählen!");
-
-  // Doppelname prüfen
   const snapshot = await playersCol.where('name','==',name).get();
-  if(!snapshot.empty){
-    return alert("Name bereits vergeben, bitte anderen wählen!");
-  }
-
-  playersCol.add({name, team: selectedTeam, score:0}).then(()=>{
+  if(!snapshot.empty) return alert("Name bereits vergeben!");
+  playersCol.add({name, team:selectedTeam, score:0}).then(()=>{
     document.getElementById('joinArea').style.display='none';
     document.getElementById('quizArea').style.display='flex';
   });
