@@ -20,7 +20,9 @@ body {
     max-width:500px;
     text-align:center;
 }
-h1 { margin-bottom:20px; }
+h1 {
+    margin-bottom:20px;
+}
 input, button {
     width:100%;
     padding:12px;
@@ -45,11 +47,23 @@ input, button {
     border:none;
     color:white;
 }
-.red { background:#d9534f; }
-.blue { background:#0275d8; }
-.inactive { opacity:0.4; }
-.selected { border:3px solid #000; filter:brightness(1.2); }
-#waitingArea img { max-width:200px; margin-top:40px; }
+.red {
+    background:#d9534f;
+}
+.blue {
+    background:#0275d8;
+}
+.inactive {
+    opacity:0.4;
+}
+.selected {
+    border:3px solid #000;
+    filter:brightness(1.2);
+}
+#waitingArea img {
+    max-width:200px;
+    margin-top:40px;
+}
 #questionHeader {
     background:#b2ebf2;
     padding:10px;
@@ -59,8 +73,16 @@ input, button {
     align-items:center;
     margin-bottom:10px;
 }
-#playerScore { font-size:1.2em; margin-bottom:10px; position:relative; }
-#timer { font-size:1.5em; margin:10px 0; font-weight:bold; }
+#playerScore {
+    font-size:1.2em;
+    margin-bottom:10px;
+    position:relative;
+}
+#timer {
+    font-size:1.5em;
+    margin:10px 0;
+    font-weight:bold;
+}
 .answerBtn {
     width:100%;
     min-height:60px;
@@ -72,8 +94,12 @@ input, button {
     background:#fff;
     transition:background 0.3s, transform 0.3s;
 }
-.answerBtn.correct { background-color:#a2d5a2; }
-.answerBtn.wrong { background-color:#f4a2a2; }
+.answerBtn.correct {
+    background-color:#a2d5a2;
+}
+.answerBtn.wrong {
+    background-color:#f4a2a2;
+}
 #countdownOverlay {
     position:fixed;
     top:20%;
@@ -150,7 +176,7 @@ let currentQuestionIndex = 0;
 let questionTimer;
 const questionDuration = 15;
 
-// Darkmode Logos
+// Darkmode
 if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
     document.getElementById("logo").src="Bilder/logo_darkmode.png";
     document.getElementById("waitingLogo").src="Bilder/logo_darkmode.png";
@@ -159,15 +185,21 @@ if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matche
 // Team-Auswahl
 document.getElementById("redBtn").addEventListener("click", ()=>selectTeam("rot"));
 document.getElementById("blueBtn").addEventListener("click", ()=>selectTeam("blau"));
+
 function selectTeam(team){
     selectedTeam=team;
     document.getElementById("redBtn").classList.remove("selected","inactive");
     document.getElementById("blueBtn").classList.remove("selected","inactive");
-    if(team==="rot"){ document.getElementById("redBtn").classList.add("selected"); document.getElementById("blueBtn").classList.add("inactive"); }
-    else { document.getElementById("blueBtn").classList.add("selected"); document.getElementById("redBtn").classList.add("inactive"); }
+    if(team==="rot"){
+        document.getElementById("redBtn").classList.add("selected");
+        document.getElementById("blueBtn").classList.add("inactive");
+    } else {
+        document.getElementById("blueBtn").classList.add("selected");
+        document.getElementById("redBtn").classList.add("inactive");
+    }
 }
 
-// Fragen + Kategorien
+// Fragen und Kategorien
 let questionCategories=[
     { category:"Geografie", questions:[
         {text:"Welche Stadt ist die Hauptstadt von Frankreich?", answers:[{text:"Rom",correct:false},{text:"Berlin",correct:false},{text:"Paris",correct:true},{text:"Madrid",correct:false}]},
@@ -183,6 +215,133 @@ let questionCategories=[
         {text:"Welcher Krieg endete mit dem Westfälischen Frieden 1648?", answers:[{text:"Erster Weltkrieg",correct:false},{text:"Dreißigjähriger Krieg",correct:true},{text:"Hundertjähriger Krieg",correct:false},{text:"Spanischer Erbfolgekrieg",correct:false}]},
         {text:"Welches Jahr markiert den Beginn der Französischen Revolution?", answers:[{text:"1776",correct:false},{text:"1804",correct:false},{text:"1789",correct:true},{text:"1812",correct:false}]}
     ]}
+	{ category:"Natur & Wissenschaft", questions:[
+		{text:"Welcher Planet wird als \"Roter Planet\" bezeichnet?", answers:[{text:"Venus", correct:false},{text:"Merkur", correct:false},{text:"Mars", correct:true},{text:"Jupiter", correct:false}]},
+		{text:"Wie viele Zähne hat ein erwachsener Mensch normalerweise?", answers:[{text:"28", correct:false},{text:"32", correct:true},{text:"30", correct:false},{text:"36", correct:false}]},
+		{text:"Welches chemische Element hat das Symbol „O“?", answers:[{text:"Gold", correct:false},{text:"Sauerstoff", correct:true},{text:"Zink", correct:false},{text:"Kalium", correct:false}]},
+		{text:"Welche Blutgruppe gilt als „Universalspender“?", answers:[{text:"A-", correct:false},{text:"0-", correct:true},{text:"AB+", correct:false},{text:"B+", correct:false}]},
+		{text:"Wie heißt der Prozess, bei dem Pflanzen mit Sonnenlicht Energie herstellen?", answers:[{text:"Fermentation", correct:false},{text:"Photosynthese", correct:true},{text:"Respiration", correct:false},{text:"Osmose", correct:false}]}
+	]},
+{ category:"Sport", questions:[
+    {text:"Wie viele Spieler stehen bei einer Fußballmannschaft auf dem Feld?", answers:[
+        {text:"10", correct:false},{text:"12", correct:false},{text:"11", correct:true},{text:"9", correct:false}
+    ]},
+    {text:"In welcher Sportart gewann Michael Schumacher Weltmeistertitel?", answers:[
+        {text:"Tennis", correct:false},{text:"Radsport", correct:false},{text:"Formel 1", correct:true},{text:"Ski Alpin", correct:false}
+    ]},
+    {text:"Wo fanden die Olympischen Sommerspiele 2008 statt?", answers:[
+        {text:"Athen", correct:false},{text:"London", correct:false},{text:"Peking", correct:true},{text:"Sydney", correct:false}
+    ]},
+    {text:"Welcher Tennisspieler hat die meisten Grand-Slam-Titel gewonnen (Stand 2023)?", answers:[
+        {text:"Roger Federer", correct:false},{text:"Novak Djokovic", correct:true},{text:"Rafael Nadal", correct:false},{text:"Pete Sampras", correct:false}
+    ]},
+    {text:"Welcher Sportler wurde „The Greatest“ genannt?", answers:[
+        {text:"Pelé", correct:false},{text:"Muhammad Ali", correct:true},{text:"Usain Bolt", correct:false},{text:"Michael Jordan", correct:false}
+    ]}
+]},
+{ category:"Kunst & Kultur", questions:[
+    {text:"Wer malte die „Mona Lisa“?", answers:[
+        {text:"Picasso", correct:false},{text:"Leonardo da Vinci", correct:true},{text:"Rembrandt", correct:false},{text:"Van Gogh", correct:false}
+    ]},
+    {text:"Welcher Komponist war im Alter von 5 Jahren ein Wunderkind am Klavier?", answers:[
+        {text:"Beethoven", correct:false},{text:"Mozart", correct:true},{text:"Haydn", correct:false},{text:"Chopin", correct:false}
+    ]},
+    {text:"Welches Land gilt als Ursprungsort des Tango?", answers:[
+        {text:"Spanien", correct:false},{text:"Italien", correct:false},{text:"Argentinien", correct:true},{text:"Frankreich", correct:false}
+    ]},
+    {text:"Wer schrieb das Theaterstück „Faust“?", answers:[
+        {text:"Goethe", correct:true},{text:"Schiller", correct:false},{text:"Lessing", correct:false},{text:"Brecht", correct:false}
+    ]},
+    {text:"Welcher Maler schnitt sich ein Ohr ab?", answers:[
+        {text:"Monet", correct:false},{text:"Van Gogh", correct:true},{text:"Cézanne", correct:false},{text:"Gauguin", correct:false}
+    ]}
+]},
+{ category:"Technik & Erfindungen", questions:[
+    {text:"Wer erfand die Glühbirne?", answers:[
+        {text:"Nikola Tesla", correct:false},{text:"Alexander Graham Bell", correct:false},{text:"Thomas Edison", correct:true},{text:"James Watt", correct:false}
+    ]},
+    {text:"Welches Unternehmen stellte 1976 den ersten Apple-Computer her?", answers:[
+        {text:"Microsoft", correct:false},{text:"IBM", correct:false},{text:"Apple", correct:true},{text:"Hewlett-Packard", correct:false}
+    ]},
+    {text:"Wie nennt man die kleinste speicherbare Informationseinheit in der Informatik?", answers:[
+        {text:"Byte", correct:false},{text:"Bit", correct:true},{text:"Kilobyte", correct:false},{text:"Megabyte", correct:false}
+    ]},
+    {text:"Wer entwickelte die Relativitätstheorie?", answers:[
+        {text:"Isaac Newton", correct:false},{text:"Nikola Tesla", correct:false},{text:"Galileo Galilei", correct:false},{text:"Albert Einstein", correct:true}
+    ]},
+    {text:"Welches Material wird in der Mikrochip-Produktion hauptsächlich verwendet?", answers:[
+        {text:"Eisen", correct:false},{text:"Silizium", correct:true},{text:"Aluminium", correct:false},{text:"Kupfer", correct:false}
+    ]}
+]},
+{ category:"Essen & Trinken", questions:[
+    {text:"Aus welchem Land stammt Pizza ursprünglich?", answers:[
+        {text:"Frankreich", correct:false},{text:"Deutschland", correct:false},{text:"Italien", correct:true},{text:"USA", correct:false}
+    ]},
+    {text:"Was ist die Hauptzutat von Hummus?", answers:[
+        {text:"Linsen", correct:false},{text:"Kichererbsen", correct:true},{text:"Erbsen", correct:false},{text:"Bohnen", correct:false}
+    ]},
+    {text:"Welcher Käse ist traditionell für Pizza Margherita gedacht?", answers:[
+        {text:"Gouda", correct:false},{text:"Cheddar", correct:false},{text:"Mozzarella", correct:true},{text:"Emmentaler", correct:false}
+    ]},
+    {text:"Wie nennt man die alkoholische Gärung von Traubensaft?", answers:[
+        {text:"Destillation", correct:false},{text:"Filtration", correct:false},{text:"Weinbereitung", correct:true},{text:"Lagerung", correct:false}
+    ]},
+    {text:"Welches Gewürz gibt Curry seine typische gelbe Farbe?", answers:[
+        {text:"Safran", correct:false},{text:"Paprika", correct:false},{text:"Kurkuma", correct:true},{text:"Kardamom", correct:false}
+    ]}
+]},
+{ category:"Medien & Unterhaltung", questions:[
+    {text:"Wer ist der Regisseur von „Jurassic Park“?", answers:[
+        {text:"James Cameron", correct:false},{text:"Steven Spielberg", correct:true},{text:"George Lucas", correct:false},{text:"Tim Burton", correct:false}
+    ]},
+    {text:"Wie heißt der berühmte Zauberlehrling in J.K. Rowlings Büchern?", answers:[
+        {text:"Frodo", correct:false},{text:"Harry Potter", correct:true},{text:"Percy Jackson", correct:false},{text:"Aragorn", correct:false}
+    ]},
+    {text:"Welcher Film gewann 2020 den Oscar für den besten Film?", answers:[
+        {text:"1917", correct:false},{text:"Parasite", correct:true},{text:"Joker", correct:false},{text:"Once Upon a Time in Hollywood", correct:false}
+    ]},
+    {text:"In welcher TV-Serie gibt es die Figur „Walter White“?", answers:[
+        {text:"Game of Thrones", correct:false},{text:"Stranger Things", correct:false},{text:"Breaking Bad", correct:true},{text:"The Wire", correct:false}
+    ]},
+    {text:"Wer sang den Song „Thriller“?", answers:[
+        {text:"Prince", correct:false},{text:"Madonna", correct:false},{text:"Elton John", correct:false},{text:"Michael Jackson", correct:true}
+    ]}
+]},
+{ category:"Sprache & Redewendungen", questions:[
+    {text:"Was bedeutet das Sprichwort „Den Nagel auf den Kopf treffen“?", answers:[
+        {text:"Etwas zerstören", correct:false},{text:"Etwas genau richtig erkennen", correct:true},{text:"Unabsichtlich handeln", correct:false},{text:"Etwas verschieben", correct:false}
+    ]},
+    {text:"Wie viele Buchstaben hat das griechische Alphabet?", answers:[
+        {text:"20", correct:false},{text:"22", correct:false},{text:"24", correct:true},{text:"26", correct:false}
+    ]},
+    {text:"Was ist die korrekte Steigerungsform von „gut“?", answers:[
+        {text:"gut, gutiger, am gutesten", correct:false},{text:"gut, besser, am besten", correct:true},{text:"gut, bester, am best", correct:false},{text:"gut, besser, besserst", correct:false}
+    ]},
+    {text:"Was bezeichnet man als „Oxymoron“?", answers:[
+        {text:"Ein Fremdwort", correct:false},{text:"Eine Kombination aus widersprüchlichen Begriffen", correct:true},{text:"Eine Kurzgeschichte", correct:false},{text:"Ein Reim", correct:false}
+    ]},
+    {text:"Welches Wort ist ein Synonym für „ephemer“?", answers:[
+        {text:"langlebig", correct:false},{text:"vergänglich", correct:true},{text:"stark", correct:false},{text:"dauerhaft", correct:false}
+    ]}
+]},
+{ category:"Kurioses & Rätselhaftes", questions:[
+    {text:"Wie viele Herzen hat ein Oktopus?", answers:[
+        {text:"1", correct:false},{text:"2", correct:false},{text:"3", correct:true},{text:"4", correct:false}
+    ]},
+    {text:"Welches Tier schläft am längsten im Jahr?", answers:[
+        {text:"Katze", correct:false},{text:"Hund", correct:false},{text:"Fettfrosch", correct:true},{text:"Koala", correct:false}
+    ]},
+    {text:"Wie nennt man die Angst vor langen Wörtern?", answers:[
+        {text:"Arachnophobie", correct:false},{text:"Hippopotomonstrosesquippedaliophobie", correct:true},{text:"Xenophobie", correct:false},{text:"Klaustrophobie", correct:false}
+    ]},
+    {text:"Welches Land hat die meisten Zeitzonen?", answers:[
+        {text:"USA", correct:false},{text:"Kanada", correct:false},{text:"Frankreich", correct:true},{text:"Russland", correct:false}
+    ]},
+    {text:"Welches chemische Element hat denselben Namen wie ein Planet?", answers:[
+        {text:"Gold", correct:false},{text:"Platin", correct:false},{text:"Neon", correct:false},{text:"Uran", correct:true}
+    ]}
+]}
+
 ];
 questionCategories = questionCategories.sort(()=>Math.random()-0.5);
 
@@ -247,12 +406,9 @@ function showQuestion(){
     const categoryEl = document.getElementById("categoryName");
     categoryEl.textContent = qSet.category;
 
-    // Kategoriefarbe: schwarz bei Lightmode, weiß bei Darkmode
-    if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
-        categoryEl.style.color = "#fff";
-    } else {
-        categoryEl.style.color = "#000";
-    }
+    const colors = ["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
+    const color = colors[currentQuestionSet % colors.length];
+    categoryEl.style.color = color;
 
     if(currentQuestionIndex === 0) animateCategory(categoryEl,currentQuestionSet);
 
