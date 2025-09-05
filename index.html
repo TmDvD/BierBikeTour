@@ -20,9 +20,7 @@ body {
     max-width:500px;
     text-align:center;
 }
-h1 {
-    margin-bottom:20px;
-}
+h1 { margin-bottom:20px; }
 input, button {
     width:100%;
     padding:12px;
@@ -47,23 +45,11 @@ input, button {
     border:none;
     color:white;
 }
-.red {
-    background:#d9534f;
-}
-.blue {
-    background:#0275d8;
-}
-.inactive {
-    opacity:0.4;
-}
-.selected {
-    border:3px solid #000;
-    filter:brightness(1.2);
-}
-#waitingArea img {
-    max-width:200px;
-    margin-top:40px;
-}
+.red { background:#d9534f; }
+.blue { background:#0275d8; }
+.inactive { opacity:0.4; }
+.selected { border:3px solid #000; filter:brightness(1.2); }
+#waitingArea img { max-width:200px; margin-top:40px; }
 #questionHeader {
     background:#b2ebf2;
     padding:10px;
@@ -73,16 +59,8 @@ input, button {
     align-items:center;
     margin-bottom:10px;
 }
-#playerScore {
-    font-size:1.2em;
-    margin-bottom:10px;
-    position:relative;
-}
-#timer {
-    font-size:1.5em;
-    margin:10px 0;
-    font-weight:bold;
-}
+#playerScore { font-size:1.2em; margin-bottom:10px; position:relative; }
+#timer { font-size:1.5em; margin:10px 0; font-weight:bold; }
 .answerBtn {
     width:100%;
     min-height:60px;
@@ -94,12 +72,8 @@ input, button {
     background:#fff;
     transition:background 0.3s, transform 0.3s;
 }
-.answerBtn.correct {
-    background-color:#a2d5a2;
-}
-.answerBtn.wrong {
-    background-color:#f4a2a2;
-}
+.answerBtn.correct { background-color:#a2d5a2; }
+.answerBtn.wrong { background-color:#f4a2a2; }
 #countdownOverlay {
     position:fixed;
     top:20%;
@@ -176,7 +150,7 @@ let currentQuestionIndex = 0;
 let questionTimer;
 const questionDuration = 15;
 
-// Darkmode
+// Darkmode Logos
 if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
     document.getElementById("logo").src="Bilder/logo_darkmode.png";
     document.getElementById("waitingLogo").src="Bilder/logo_darkmode.png";
@@ -185,21 +159,15 @@ if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matche
 // Team-Auswahl
 document.getElementById("redBtn").addEventListener("click", ()=>selectTeam("rot"));
 document.getElementById("blueBtn").addEventListener("click", ()=>selectTeam("blau"));
-
 function selectTeam(team){
     selectedTeam=team;
     document.getElementById("redBtn").classList.remove("selected","inactive");
     document.getElementById("blueBtn").classList.remove("selected","inactive");
-    if(team==="rot"){
-        document.getElementById("redBtn").classList.add("selected");
-        document.getElementById("blueBtn").classList.add("inactive");
-    } else {
-        document.getElementById("blueBtn").classList.add("selected");
-        document.getElementById("redBtn").classList.add("inactive");
-    }
+    if(team==="rot"){ document.getElementById("redBtn").classList.add("selected"); document.getElementById("blueBtn").classList.add("inactive"); }
+    else { document.getElementById("blueBtn").classList.add("selected"); document.getElementById("redBtn").classList.add("inactive"); }
 }
 
-// Fragen und Kategorien
+// Fragen + Kategorien
 let questionCategories=[
     { category:"Geografie", questions:[
         {text:"Welche Stadt ist die Hauptstadt von Frankreich?", answers:[{text:"Rom",correct:false},{text:"Berlin",correct:false},{text:"Paris",correct:true},{text:"Madrid",correct:false}]},
@@ -279,9 +247,12 @@ function showQuestion(){
     const categoryEl = document.getElementById("categoryName");
     categoryEl.textContent = qSet.category;
 
-    const colors = ["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
-    const color = colors[currentQuestionSet % colors.length];
-    categoryEl.style.color = color;
+    // Kategoriefarbe: schwarz bei Lightmode, weiß bei Darkmode
+    if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
+        categoryEl.style.color = "#fff";
+    } else {
+        categoryEl.style.color = "#000";
+    }
 
     if(currentQuestionIndex === 0) animateCategory(categoryEl,currentQuestionSet);
 
