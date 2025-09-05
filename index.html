@@ -14,7 +14,7 @@
       align-items: center;
       min-height: 100vh;
     }
-    #joinArea, #quizArea {
+    #joinArea, #waitingArea, #quizArea {
       width: 90%;
       max-width: 500px;
       text-align: center;
@@ -48,6 +48,10 @@
     .blue { background: #0275d8; }
     .inactive { opacity: 0.4; }
     .selected { border: 3px solid #000; filter: brightness(1.2); }
+    #waitingArea img {
+      max-width: 200px;
+      margin-top: 40px;
+    }
     #questionHeader {
       background: #ddd;
       padding: 10px;
@@ -83,7 +87,7 @@
       left:0;
       width:100%;
       height:100%;
-      background: rgba(0,0,0,0.9);
+      background: green;
       color:white;
       display:flex;
       justify-content:center;
@@ -91,6 +95,7 @@
       font-size:3em;
       display:none;
       z-index:1000;
+      transition: background 0.5s ease;
     }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -98,6 +103,7 @@
 </head>
 <body>
 
+<!-- Spieler Anmelden -->
 <div id="joinArea">
   <img id="logo" src="Bilder/logo_lightmode.png" alt="Logo" style="max-width:150px;margin-bottom:20px;">
   <h1>Bierbike Quiz</h1>
@@ -109,6 +115,13 @@
   <button id="joinBtn">Beitreten</button>
 </div>
 
+<!-- Warten auf Admin -->
+<div id="waitingArea" style="display:none;">
+  <img id="waitingLogo" src="Bilder/logo_lightmode.png" alt="Logo">
+  <p>Bitte warten, der Admin startet das Spiel…</p>
+</div>
+
+<!-- Quiz -->
 <div id="quizArea" style="display:none;">
   <div id="playerScore">Punkte: 0</div>
   <div id="questionHeader">
@@ -120,7 +133,8 @@
   <div id="answers"></div>
 </div>
 
-<div id="countdownOverlay">3</div>
+<!-- Countdown Overlay -->
+<div id="countdownOverlay">5</div>
 
 <script>
 const firebaseConfig = {
@@ -138,14 +152,14 @@ const gameState = db.collection("game").doc("state");
 
 let selectedTeam = null;
 let currentPlayerId = null;
-let playerScore = 0;
 
 // Darkmode-Logo
 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
   document.getElementById("logo").src = "Bilder/logo_darkmode.png";
+  document.getElementById("waitingLogo").src = "Bilder/logo_darkmode.png";
 }
 
-// Team Buttons
+// Team Auswahl
 document.getElementById("redBtn").addEventListener("click", () => selectTeam("rot"));
 document.getElementById("blueBtn").addEventListener("click", () => selectTeam("blau"));
 
@@ -162,7 +176,7 @@ function selectTeam(team) {
   }
 }
 
-// Join
+// Spieler beitreten
 document.getElementById("joinBtn").addEventListener("click", async () => {
   const name = document.getElementById("playerName").value.trim();
   if(!name || name.length>10) { alert("Ungültiger Name (max 10 Zeichen)!"); return; }
@@ -172,8 +186,9 @@ document.getElementById("joinBtn").addEventListener("click", async () => {
 
   const docRef = await playersCol.add({name,team:selectedTeam,score:0});
   currentPlayerId = docRef.id;
+
   document.getElementById("joinArea").style.display="none";
-  document.getElementById("quizArea").style.display="block";
+  document.getElementById("waitingArea").style.display="block";
 });
 
 // Listener GameState
@@ -181,8 +196,9 @@ gameState.onSnapshot(doc=>{
   const data = doc.data();
   if(!data) return;
   if(data.gameReset){
-    // Reset zurück zur Anmeldung
+    // Reset → zurück zur Anmeldung
     document.getElementById("quizArea").style.display="none";
+    document.getElementById("waitingArea").style.display="none";
     document.getElementById("joinArea").style.display="block";
     document.getElementById("playerName").value="";
     selectedTeam=null;
@@ -190,28 +206,32 @@ gameState.onSnapshot(doc=>{
     gameState.update({gameReset:false});
   }
   if(data.started){
-    startCountdown(15); // Starttimer mit Farbwechsel
+    startCountdown(5); // Nur Admin triggert Start
   }
 });
 
-// Countdown Overlay (Start)
+// Countdown Overlay mit Farbverlauf Grün→Rot
 function startCountdown(sec){
   const overlay = document.getElementById("countdownOverlay");
   overlay.style.display="flex";
   let c=sec;
-  const colors=["#d9534f","#0275d8","#5cb85c","#f0ad4e","#6f42c1"];
+  overlay.textContent=c;
+
+  const colors=["#28a745","#8bc34a","#ffc107","#ff9800","#dc3545"];
   let idx=0;
   overlay.style.background=colors[idx];
-  overlay.textContent=c;
+
   const int=setInterval(()=>{
     c--;
-    idx=(idx+1)%colors.length;
-    overlay.style.background=colors[idx];
+    idx++;
+    if(idx<colors.length) overlay.style.background=colors[idx];
     overlay.textContent=c>0?c:"Start!";
     if(c<0){
       clearInterval(int);
       overlay.style.display="none";
-      // Hier Spielstart → Fragen laden usw.
+      document.getElementById("waitingArea").style.display="none";
+      document.getElementById("quizArea").style.display="block";
+      // Hier Quiz starten
     }
   },1000);
 }
