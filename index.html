@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Bierbike - Quiz</title>
+<title>Bierbike-Quiz</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
 * { box-sizing: border-box; margin:0; padding:0; }
@@ -10,7 +10,7 @@ body { font-family:sans-serif; background:#f4f4f4; display:flex; justify-content
 .container { width:95%; max-width:500px; text-align:center; }
 input, button { width:100%; padding:15px; font-size:1.2em; margin:10px 0; border-radius:10px; border:1px solid #ccc; box-sizing:border-box; }
 button { background:#e0e0e0; color:#333; cursor:pointer; }
-#loginArea, #quizArea, #infoArea { display:flex; flex-direction:column; align-items:center; width:100%; }
+#loginArea, #quizArea, #infoArea, #waitingArea { display:flex; flex-direction:column; align-items:center; width:100%; }
 #playerName { margin-bottom:5px; }
 .teamSelect { flex:1; padding:15px; border-radius:10px; border:1px solid #ccc; margin:0; cursor:pointer; transition: all 0.2s; }
 .teamSelect.red { background:#d9534f; color:white; }
@@ -27,14 +27,14 @@ button { background:#e0e0e0; color:#333; cursor:pointer; }
 .answer.wrong { background:#f8d7da; }
 .plusAnim { position:absolute; color:green; font-weight:bold; animation:moveUp 0.6s forwards; }
 @keyframes moveUp { 0% { opacity:1; transform:translateY(0);} 100% { opacity:0; transform:translateY(-20px);} }
-#infoArea { display:none; font-size:1.2em; color:#333; text-align:center; }
+#infoArea, #waitingArea { display:none; font-size:1.2em; color:#333; text-align:center; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div class="container" id="loginArea">
-  <h1>Bierbike - Quiz</h1>
+  <h1>Bierbike-Quiz</h1>
   <input type="text" id="playerName" placeholder="Name (max 10)" maxlength="10">
   <div id="teamButtons">
     <button class="teamSelect red" data-team="rot">Rot</button>
@@ -43,8 +43,12 @@ button { background:#e0e0e0; color:#333; cursor:pointer; }
   <button id="joinBtn">Beitreten</button>
 </div>
 
+<div class="container" id="waitingArea">
+  <p>Warte auf den Start durch den Admin...</p>
+</div>
+
 <div class="container" id="infoArea">
-  <p>Ein Spiel läuft gerade, Beitreten ist nicht möglich.</p>
+  <p>Spiel läuft gerade, Beitreten ist nicht möglich.</p>
 </div>
 
 <div class="container" id="quizArea" style="display:none;">
@@ -98,12 +102,18 @@ document.getElementById("joinBtn").addEventListener("click", async ()=>{
   if(!playerName || playerName.length>10){alert("Name max. 10 Zeichen"); return;}
   if(!playerTeam){alert("Team wählen!"); return;}
   
-  // Prüfen, ob ein Spiel läuft
   const stateSnap = await gameState.get();
-  if(stateSnap.exists && stateSnap.data().started && !stateSnap.data().gameReset){
-    document.getElementById("loginArea").style.display="none";
-    document.getElementById("infoArea").style.display="flex";
-    return;
+  if(stateSnap.exists){
+    const stateData = stateSnap.data();
+    if(stateData.started && !stateData.gameReset){
+      document.getElementById("loginArea").style.display="none";
+      document.getElementById("infoArea").style.display="flex";
+      return;
+    } else if(stateData.started && stateData.waitingForStart){
+      document.getElementById("loginArea").style.display="none";
+      document.getElementById("waitingArea").style.display="flex";
+      return;
+    }
   }
 
   const snap=await playersCol.where("name","==",playerName).get();
@@ -114,31 +124,29 @@ document.getElementById("joinBtn").addEventListener("click", async ()=>{
   listenGameStart();
 });
 
-// Spieler-Score live
 playersCol.doc(playerName).onSnapshot(doc=>{
   if(!doc.exists) return;
   playerScore=doc.data().score||0;
 });
 
-// Quizstart / Reset Handling
 function listenGameStart(){
   gameState.onSnapshot(doc=>{
     const data=doc.data();
     if(!data) return;
     
-    if(data.gameReset){ // Reset durch Admin
+    if(data.gameReset){
       clearInterval(timerInt);
       document.getElementById("quizArea").style.display="none";
+      document.getElementById("waitingArea").style.display="none";
       document.getElementById("infoArea").style.display="none";
       document.getElementById("loginArea").style.display="flex";
       currentQ=0;
-    } else if(data.started){
+    } else if(data.started && !data.gameReset){
       startCountdown();
     }
   });
 }
 
-// Countdown 5 Sekunden vor Quiz
 function startCountdown(){
   let sec=5;
   const timerEl=document.getElementById("timer");
@@ -150,7 +158,6 @@ function startCountdown(){
   },1000);
 }
 
-// Frage anzeigen
 function startQuestion(){
   if(currentQ>=questions.length){document.getElementById("timer").innerText="Feierabend!"; return;}
   const q=questions[currentQ];
@@ -166,10 +173,10 @@ function startQuestion(){
     btn.addEventListener("click",()=>{
       clearInterval(timerInt);
       if(i===q.correct){ addPoints(q.points); btn.classList.add("correct"); }
-      else { btn.classList.add("wrong"); 
-             // richtige Antwort markieren
-             answersDiv.children[q.correct].classList.add("correct");
-           }
+      else { 
+        btn.classList.add("wrong");
+        answersDiv.children[q.correct].classList.add("correct");
+      }
       setTimeout(()=>{ currentQ++; startQuestion(); },2000);
     });
     answersDiv.appendChild(btn);
@@ -177,7 +184,6 @@ function startQuestion(){
   startQuestionTimer(15);
 }
 
-// Timer 15 Sekunden pro Frage (nur Zahl, Farbe bleibt dunkelblau)
 function startQuestionTimer(sec){
   const timerEl=document.getElementById("timer");
   timerEl.style.color="darkblue";
@@ -189,7 +195,6 @@ function startQuestionTimer(sec){
   },1000);
 }
 
-// Punkte Animation
 function addPoints(p){
   const playerRef=playersCol.doc(playerName);
   playerScore+=p;
