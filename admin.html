@@ -14,17 +14,18 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
   align-items: center;
   background: #fafafa;
 }
-h1,h2 {
-  margin: 5px 0;
-  text-align: center;
-}
-#passwordPrompt, #adminArea {
+
+/* Passwortfenster mittig */
+#passwordPrompt {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
   width: 90%;
-  margin-top: 20px;
 }
 .adminInput {
   width: 100%;
@@ -33,6 +34,14 @@ h1,h2 {
   margin-top: 10px;
   border-radius: 8px;
   box-sizing: border-box;
+}
+
+/* Admin Bereich */
+#adminArea {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  align-items: center;
 }
 #header {
   width: 100%;
@@ -49,6 +58,8 @@ h1,h2 {
   text-align: center;
   margin: 10px 0;
 }
+
+/* Teams nebeneinander */
 #teamsContainer {
   display: flex;
   justify-content: space-around;
@@ -60,6 +71,9 @@ h1,h2 {
   background:#eee;
   padding:10px;
   border-radius:5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 #redTeam { background:#f88; }
 #blueTeam { background:#ccf; }
@@ -67,8 +81,20 @@ h1,h2 {
   margin: 0 0 5px 0;
   text-align: center;
 }
+.teamColumn .totalPoints {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+/* Spieler mittig */
+.teamColumn .player {
+  text-align: center;
+  margin: 2px 0;
+}
+
+/* Buttons */
 #adminControls {
-  width: 100%;
+  width: 90%;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -86,11 +112,13 @@ h1,h2 {
 </head>
 <body>
 
+<!-- Passwort Login -->
 <div id="passwordPrompt">
   <input type="password" id="adminPass" placeholder="Passwort" class="adminInput">
   <button id="loginBtn" class="adminInput">Login</button>
 </div>
 
+<!-- Admin Bereich -->
 <div id="adminArea" style="display:none;">
   <div id="header">
     <h1>Bierbike Quiz</h1>
@@ -101,9 +129,11 @@ h1,h2 {
   <div id="teamsContainer">
     <div id="redTeam" class="teamColumn">
       <h3>Rotes Team</h3>
+      <div class="totalPoints">0 P.</div>
     </div>
     <div id="blueTeam" class="teamColumn">
       <h3>Blaues Team</h3>
+      <div class="totalPoints">0 P.</div>
     </div>
   </div>
 
@@ -141,7 +171,7 @@ let questions = [
 document.getElementById('loginBtn').addEventListener('click', ()=>{
   if(document.getElementById('adminPass').value==="1557"){
     document.getElementById('passwordPrompt').style.display="none";
-    document.getElementById('adminArea').style.display="block";
+    document.getElementById('adminArea').style.display="flex";
     updateLobbyAndScores();
   } else alert("Falsches Passwort!");
 });
@@ -152,16 +182,22 @@ function updateLobbyAndScores(){
     let redScore=0, blueScore=0;
     const redDiv = document.getElementById('redTeam');
     const blueDiv = document.getElementById('blueTeam');
-    redDiv.innerHTML="<h3>Rotes Team</h3>";
-    blueDiv.innerHTML="<h3>Blaues Team</h3>";
+
+    // Reset Inhalte außer Überschrift & Gesamtpunkte
+    redDiv.querySelectorAll('.player').forEach(e=>e.remove());
+    blueDiv.querySelectorAll('.player').forEach(e=>e.remove());
+
     snapshot.forEach(doc=>{
       const data = doc.data();
       const el = document.createElement('div');
+      el.className = 'player';
       el.textContent = data.name + " (" + (data.score||0) + " P.)";
       if(data.team==="rot"){ redDiv.appendChild(el); redScore+=data.score||0; }
-      else { blueDiv.appendChild(el); blueDiv.appendChild(el); blueScore+=data.score||0; }
+      else { blueDiv.appendChild(el); blueScore+=data.score||0; }
     });
-    // Optional: Gesamtpunkte auch im Teamkopf anzeigen
+
+    redDiv.querySelector('.totalPoints').textContent = redScore + " P.";
+    blueDiv.querySelector('.totalPoints').textContent = blueScore + " P.";
   });
 }
 setInterval(updateLobbyAndScores,2000);
@@ -177,7 +213,11 @@ function startQuizTimer(totalSeconds){
   quizTotalTime = totalSeconds;
   clearInterval(quizTimerInterval);
   quizTimerInterval = setInterval(()=>{
-    if(quizTotalTime<=0){ clearInterval(quizTimerInterval); return; }
+    if(quizTotalTime<=0){ 
+      clearInterval(quizTimerInterval);
+      document.getElementById('timer').textContent="Ende";
+      return; 
+    }
     quizTotalTime--;
     document.getElementById('timer').textContent = "Restzeit: "+quizTotalTime+" s";
   },1000);
