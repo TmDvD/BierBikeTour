@@ -5,6 +5,7 @@
 <title>Bierbike Quiz - Admin</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
+* { box-sizing: border-box; }
 body {
   margin: 0;
   font-family: sans-serif;
@@ -49,12 +50,11 @@ input, button {
   display: flex;
   justify-content: space-between;
   align-items: center; /* vertikal zentriert */
-  padding: 10px;
+  padding: 0 10px;
   margin: 5px 0;
   border-radius: 6px;
   background: rgba(255,255,255,0.2);
-  min-height: 50px; /* gleiche Höhe */
-  box-sizing: border-box;
+  height: 50px; /* exakt gleiche Höhe wie Button */
 }
 .player .score {
   font-weight: bold;
@@ -67,9 +67,14 @@ input, button {
 }
 #controlButtons button {
   flex: 1;
-  background:#e0e0e0; /* dezente Farbe */
+  padding: 0;
+  font-size: 1.2em;
+  height: 50px; /* exakt gleiche Höhe wie Spielerfelder */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  background:#e0e0e0;
   color:#333;
-  border:1px solid #ccc;
+  margin: 0;
 }
 #timer {
   font-size: 1.6em;
