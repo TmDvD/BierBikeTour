@@ -11,21 +11,23 @@
 <h1>Bierbike Quiz – Spieler</h1>
 
 <div id="name-team">
-<input type="text" id="playerName" placeholder="Dein Name">
-<select id="teamSelect">
-<option value="rot">Rot</option>
-<option value="blau">Blau</option>
-</select>
-<button id="joinBtn">Beitreten</button>
+  <input type="text" id="playerName" placeholder="Dein Name">
+  <select id="teamSelect">
+    <option value="rot">Rot</option>
+    <option value="blau">Blau</option>
+  </select>
+  <button id="joinBtn">Beitreten</button>
 </div>
 
 <div id="quizArea" style="display:none;">
-<div id="timer">15</div>
-<h2 id="categoryTitle" class="category">Kategorie</h2>
-<hr>
-<div id="questionText">Frage</div>
-<div id="pointsCircle"><span id="pointsNumber">0</span><br>Punkte</div>
-<div id="options"></div>
+  <div id="timer">15</div>
+  <h2 id="categoryTitle" class="category">Kategorie</h2>
+  <hr>
+  <div id="questionWrapper">
+    <div id="questionText">Frage</div>
+    <div id="pointsCircle"><span id="pointsNumber">0</span><br>Punkte</div>
+  </div>
+  <div id="options"></div>
 </div>
 
 <script src="js/quiz.js"></script>

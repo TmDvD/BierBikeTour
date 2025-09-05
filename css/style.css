@@ -5,7 +5,8 @@ h1,h2,h3 { color: #333; }
 #redTeam { background:#f88; }
 #timer { font-size:2em; font-weight:bold; margin-bottom:10px; }
 .category { font-weight:bold; margin-bottom:5px; }
-#pointsCircle { float:right; width:60px; height:60px; border-radius:50%; background:#ddd; text-align:center; line-height:1.2; font-weight:bold; margin-left:10px; }
+#questionWrapper { display:flex; align-items:center; justify-content:space-between; }
+#pointsCircle { width:60px; height:60px; border-radius:50%; background:#ddd; text-align:center; line-height:1.2; font-weight:bold; }
 hr { border:1px solid #ccc; margin:5px 0; }
 #options div { margin:5px 0; padding:5px; border:1px solid #333; cursor:pointer; }
 #teamScores { margin-bottom:20px; font-weight:bold; }
