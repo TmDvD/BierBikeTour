@@ -5,15 +5,39 @@
 <title>Bierbike Quiz – Spieler</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body { font-family: sans-serif; margin:10px; }
+  body { font-family: sans-serif; margin:0; }
   h1,h2,h3 { margin:5px 0; text-align:center; }
   #timer { font-size:2em; font-weight:bold; margin-bottom:15px; text-align:center; }
   .category { font-weight:bold; color:white; padding:8px; border-radius:5px; margin-bottom:5px; text-align:center; }
   .questionWrapper { display:flex; justify-content: space-between; align-items:center; margin-bottom:10px; flex-wrap: wrap; }
-  #questionText { flex:1; font-size:1.2em; margin-bottom:5px; }
+  #questionText { flex:1; font-size:1.2em; margin-bottom:5px; text-align:center; }
   #pointsCircle { width:60px; height:60px; border-radius:50%; background:#ddd; text-align:center; line-height:1.2; font-weight:bold; margin-left:10px; }
   hr { border:1px solid #ccc; margin:5px 0 10px 0; }
   #options div { margin:5px 0; padding:12px; border:1px solid #333; cursor:pointer; border-radius:5px; font-size:1.1em; text-align:center; }
+
+  /* Mobil-Optimierung Hochkant */
+  @media (max-width: 768px) {
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    #quizArea, #name-team {
+      width: 90%;
+    }
+    .questionWrapper {
+      flex-direction: column;
+      align-items: center;
+    }
+    #pointsCircle {
+      margin-left: 0;
+      margin-top: 10px;
+    }
+    #options div {
+      width: 100%;
+    }
+  }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -59,7 +83,6 @@ const gameState = db.collection('game').doc('state');
 let currentQ = 0;
 let timerInterval;
 
-// Beispiel-Fragen
 let questions = [
   {category:"Allgemeinwissen", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
   {category:"Allgemeinwissen", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
@@ -87,7 +110,7 @@ gameState.onSnapshot(doc=>{
 
 function showQuestion(index){
   if(index >= questions.length){
-    document.getElementById('quizArea').innerHTML="<h2>Yoo Digga, Feierabend! Danke für's mitmachen 🍺</h2>";
+    document.getElementById('quizArea').innerHTML="<h2>Feierabend, ihr Legenden! 🍺</h2>";
     return;
   }
   const q = questions[index];
@@ -117,7 +140,6 @@ function showQuestion(index){
     optionsDiv.appendChild(div);
   });
 
-  // Timer pro Frage
   let time=15;
   document.getElementById('timer').textContent=time;
   clearInterval(timerInterval);
