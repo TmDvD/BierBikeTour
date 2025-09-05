@@ -2,8 +2,15 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Admin</title>
-<link rel="stylesheet" href="css/style.css">
+<title>Bierbike Quiz – Admin</title>
+<style>
+  body { font-family: sans-serif; margin:20px; }
+  h1,h2,h3 { color:#333; margin:5px 0; }
+  .teamColumn { width:48%; float:left; background:#eee; padding:10px; min-height:100px; border-radius:5px; }
+  #redTeam { background:#f88; }
+  #blueTeam { background:#ccf; }
+  #teamScores { font-weight:bold; margin-bottom:20px; clear:both; }
+</style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
@@ -11,22 +18,17 @@
 <h1>Bierbike Quiz – Admin</h1>
 
 <div id="teamScores">
-  <h3>Team Punkte</h3>
   <div>Rotes Team: <span id="redScore">0</span></div>
   <div>Blaues Team: <span id="blueScore">0</span></div>
 </div>
 
 <div id="teamsLobby">
-  <div id="redTeam" class="teamColumn"></div>
-  <div id="blueTeam" class="teamColumn"></div>
+  <div id="redTeam" class="teamColumn"><h3>Rotes Team</h3></div>
+  <div id="blueTeam" class="teamColumn"><h3>Blaues Team</h3></div>
 </div>
 
-<div id="currentQuestion"></div>
-<div id="startQuiz">
-  <button id="startBtn">Quiz starten</button>
-</div>
+<button id="startBtn">Quiz starten</button>
 
-<script src="js/quiz.js"></script>
 <script>
 const firebaseConfig = {
   apiKey: "AIzaSyDS2CTzFC_G-dTi-LE5umuvTWET4plsGH0",
@@ -38,6 +40,33 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+const playersCol = db.collection('players');
+const gameState = db.collection('game').doc('state');
+
+function updateLobbyAndScores(){
+  playersCol.get().then(snapshot=>{
+    let redScore=0, blueScore=0;
+    const redDiv = document.getElementById('redTeam');
+    const blueDiv = document.getElementById('blueTeam');
+    redDiv.innerHTML="<h3>Rotes Team</h3>";
+    blueDiv.innerHTML="<h3>Blaues Team</h3>";
+    snapshot.forEach(doc=>{
+      const data = doc.data();
+      const el = document.createElement('div');
+      el.textContent = data.name + " (" + data.score + " Punkte)";
+      if(data.team==="rot"){ redDiv.appendChild(el); redScore+=data.score||0; }
+      else { blueDiv.appendChild(el); blueScore+=data.score||0; }
+    });
+    document.getElementById('redScore').textContent = redScore;
+    document.getElementById('blueScore').textContent = blueScore;
+  });
+}
+setInterval(updateLobbyAndScores,2000);
+
+document.getElementById('startBtn').addEventListener('click', ()=>{
+  gameState.set({currentQuestion:0, started:true});
+});
 </script>
+
 </body>
 </html>
