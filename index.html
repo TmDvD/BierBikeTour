@@ -281,12 +281,16 @@ function showQuestion(){
 
     const colors = ["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
     const color = colors[currentQuestionSet % colors.length];
-    categoryEl.style.color = color;
 
-    if(currentQuestionIndex === 0) animateCategory(categoryEl,currentQuestionSet);
+    // Schriftfarbe dauerhaft setzen wie beim Header
+    categoryEl.style.color = color;
+    document.getElementById("questionPoints").style.color = color;
+
+    if(currentQuestionIndex === 0) animateCategory(categoryEl, currentQuestionSet, color);
 
     document.getElementById("questionText").textContent = q.text;
-    const currentPoints = currentQuestionIndex+1;
+
+    const currentPoints = currentQuestionIndex + 1;
     document.getElementById("questionPoints").textContent = currentPoints + " Punkt" + (currentPoints>1?"e":"");
 
     const totalQuestions = questionCategories.reduce((sum, cat) => sum + cat.questions.length, 0);
@@ -317,33 +321,32 @@ function showQuestion(){
     });
 }
 
-// Kategorie animieren
-function animateCategory(categoryEl,categoryIndex){
-    const colors=["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
-    const color=colors[categoryIndex % colors.length];
-    const questionHeader=document.getElementById("questionHeader");
-    questionHeader.style.background=color;
+// Kategorie animieren (Overlay nur für Animation, Farbe von categoryEl bleibt)
+function animateCategory(categoryEl, categoryIndex, color){
+    const questionHeader = document.getElementById("questionHeader");
+    questionHeader.style.background = color;
 
-    const overlay=document.createElement("div");
-    overlay.textContent=categoryEl.textContent;
-    overlay.style.position="fixed";
-    overlay.style.top="50%";
-    overlay.style.left="50%";
-    overlay.style.transform="translate(-50%,-50%) scale(1.5)";
-    overlay.style.padding="20px 40px";
-    overlay.style.background=color;
-    overlay.style.color="#fff";
-    overlay.style.fontSize="2em";
-    overlay.style.fontWeight="bold";
-    overlay.style.borderRadius="8px";
-    overlay.style.zIndex="2000";
-    overlay.style.boxShadow="0 0 20px rgba(0,0,0,0.5)";
-    overlay.style.textAlign="center";
-    overlay.style.transition="transform 0.3s";
+    const overlay = document.createElement("div");
+    overlay.textContent = categoryEl.textContent;
+    overlay.style.position = "fixed";
+    overlay.style.top = "50%";
+    overlay.style.left = "50%";
+    overlay.style.transform = "translate(-50%,-50%) scale(1.5)";
+    overlay.style.padding = "20px 40px";
+    overlay.style.background = color;
+    overlay.style.color = "#fff";
+    overlay.style.fontSize = "2em";
+    overlay.style.fontWeight = "bold";
+    overlay.style.borderRadius = "8px";
+    overlay.style.zIndex = "2000";
+    overlay.style.boxShadow = "0 0 20px rgba(0,0,0,0.5)";
+    overlay.style.textAlign = "center";
+    overlay.style.transition = "transform 0.3s";
     document.body.appendChild(overlay);
+
     setTimeout(()=>{
-        overlay.style.transform="translate(-50%,-50%) scale(1)";
-        setTimeout(()=>{ overlay.remove(); categoryEl.style.border="none"; },3000);
+        overlay.style.transform = "translate(-50%,-50%) scale(1)";
+        setTimeout(()=>{ overlay.remove(); },3000);
     },10);
 }
 
