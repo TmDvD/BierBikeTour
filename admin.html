@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <title>Bierbike Quiz – Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body { font-family:sans-serif; margin:20px; }
-  h1,h2,h3 { color:#333; margin:5px 0; }
-  .teamColumn { width:48%; float:left; background:#eee; padding:10px; min-height:100px; border-radius:5px; }
+  body { font-family:sans-serif; margin:10px; }
+  h1,h2,h3 { margin:5px 0; text-align:center; }
+  #teamScores { font-weight:bold; margin-bottom:10px; text-align:center; }
+  .teamColumn { width:100%; background:#eee; padding:10px; min-height:80px; border-radius:5px; margin-bottom:10px; }
   #redTeam { background:#f88; }
   #blueTeam { background:#ccf; }
-  #teamScores { font-weight:bold; margin-bottom:20px; clear:both; }
-  #adminControls { margin-top:20px; clear:both; }
-  #quizTimer { font-size:1.5em; margin-top:10px; font-weight:bold; }
+  #adminControls button { width:100%; padding:12px; margin-top:5px; font-size:1.1em; }
+  #quizTimer { font-size:1.5em; margin-top:5px; font-weight:bold; text-align:center; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -20,8 +21,8 @@
 
 <div id="passwordPrompt">
   <h2>Admin Login</h2>
-  <input type="password" id="adminPass" placeholder="Passwort">
-  <button id="loginBtn">Login</button>
+  <input type="password" id="adminPass" placeholder="Passwort" style="width:100%; padding:8px; font-size:1em;">
+  <button id="loginBtn" style="width:100%; padding:10px; margin-top:5px; font-size:1em;">Login</button>
 </div>
 
 <div id="adminArea" style="display:none;">
@@ -54,85 +55,4 @@ const firebaseConfig = {
   appId: "1:25696521871:web:35cca5b0e39f88c4576afa"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const playersCol = db.collection('players');
-const gameState = db.collection('game').doc('state');
-
-let quizTotalTime = 0;
-let quizTimerInterval;
-
-// --- Admin Passwort prüfen ---
-document.getElementById('loginBtn').addEventListener('click', ()=>{
-  const pass = document.getElementById('adminPass').value;
-  if(pass === "1557"){
-    document.getElementById('passwordPrompt').style.display="none";
-    document.getElementById('adminArea').style.display="block";
-    updateLobbyAndScores();
-  } else {
-    alert("Falsches Passwort!");
-  }
-});
-
-// --- Team Lobby & Punkte live ---
-function updateLobbyAndScores(){
-  playersCol.get().then(snapshot=>{
-    let redScore=0, blueScore=0;
-    const redDiv = document.getElementById('redTeam');
-    const blueDiv = document.getElementById('blueTeam');
-    redDiv.innerHTML="<h3>Rotes Team</h3>";
-    blueDiv.innerHTML="<h3>Blaues Team</h3>";
-    snapshot.forEach(doc=>{
-      const data = doc.data();
-      const el = document.createElement('div');
-      el.textContent = data.name + " (" + data.score + " Punkte)";
-      if(data.team==="rot"){ redDiv.appendChild(el); redScore+=data.score||0; }
-      else { blueDiv.appendChild(el); blueScore+=data.score||0; }
-    });
-    document.getElementById('redScore').textContent=redScore;
-    document.getElementById('blueScore').textContent=blueScore;
-  });
-}
-setInterval(updateLobbyAndScores,2000);
-
-// --- Quiz starten ---
-document.getElementById('startBtn').addEventListener('click', ()=>{
-  gameState.set({currentQuestion:0, started:true});
-  startQuizTimer(questions.length*15); // gesamte Restzeit = Anzahl Fragen × 15s
-});
-
-// --- Gesamt-Timer ---
-function startQuizTimer(totalSeconds){
-  quizTotalTime = totalSeconds;
-  clearInterval(quizTimerInterval);
-  quizTimerInterval = setInterval(()=>{
-    if(quizTotalTime<=0){ clearInterval(quizTimerInterval); return; }
-    quizTotalTime--;
-    document.getElementById('quizTimer').textContent = "Restzeit: "+quizTotalTime+" s";
-  },1000);
-}
-
-// --- Quiz zurücksetzen ---
-document.getElementById('resetBtn').addEventListener('click', async ()=>{
-  if(confirm("Willst du wirklich das Quiz zurücksetzen und alle Teilnehmer löschen?")){
-    const snapshot = await playersCol.get();
-    snapshot.forEach(doc => doc.ref.delete());
-    gameState.set({currentQuestion:0, started:false});
-    clearInterval(quizTimerInterval);
-    document.getElementById('quizTimer').textContent="Restzeit: 0 s";
-    alert("Quiz wurde zurückgesetzt.");
-  }
-});
-
-// Beispiel-Fragen (nur für Timerberechnung)
-let questions = [
-  {category:"Allgemeinwissen", question:"Frage 1?", points:1},
-  {category:"Allgemeinwissen", question:"Frage 2?", points:2},
-  {category:"Allgemeinwissen", question:"Frage 3?", points:3},
-  {category:"Allgemeinwissen", question:"Frage 4?", points:4},
-  {category:"Allgemeinwissen", question:"Frage 5?", points:5},
-  // weitere Kategorien hier einfügen
-];
-</script>
-
-</body>
-</html>
+const db = firebase.firestore

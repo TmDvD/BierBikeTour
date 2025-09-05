@@ -3,30 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <title>Bierbike Quiz – Spieler</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-  body { font-family: sans-serif; margin: 20px; }
-  h1,h2,h3 { color: #333; margin:5px 0; }
-  #timer { font-size:2em; font-weight:bold; margin-bottom:15px; }
-  .category { font-weight:bold; color:white; padding:5px; border-radius:5px; margin-bottom:5px; }
-  .questionWrapper { display:flex; justify-content: space-between; align-items:center; margin-bottom:10px; }
-  #pointsCircle { width:60px; height:60px; border-radius:50%; background:#ddd; text-align:center; line-height:1.2; font-weight:bold; }
+  body { font-family: sans-serif; margin:10px; }
+  h1,h2,h3 { margin:5px 0; text-align:center; }
+  #timer { font-size:2em; font-weight:bold; margin-bottom:15px; text-align:center; }
+  .category { font-weight:bold; color:white; padding:8px; border-radius:5px; margin-bottom:5px; text-align:center; }
+  .questionWrapper { display:flex; justify-content: space-between; align-items:center; margin-bottom:10px; flex-wrap: wrap; }
+  #questionText { flex:1; font-size:1.2em; margin-bottom:5px; }
+  #pointsCircle { width:60px; height:60px; border-radius:50%; background:#ddd; text-align:center; line-height:1.2; font-weight:bold; margin-left:10px; }
   hr { border:1px solid #ccc; margin:5px 0 10px 0; }
-  #options div { margin:5px 0; padding:8px; border:1px solid #333; cursor:pointer; border-radius:4px; }
+  #options div { margin:5px 0; padding:12px; border:1px solid #333; cursor:pointer; border-radius:5px; font-size:1.1em; text-align:center; }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
-<h1>Bierbike Quiz – Spieler</h1>
+<h1>Bierbike Quiz</h1>
 
 <div id="name-team">
-  <input type="text" id="playerName" placeholder="Dein Name">
-  <select id="teamSelect">
+  <input type="text" id="playerName" placeholder="Dein Name" style="width:100%; padding:8px; font-size:1em;">
+  <select id="teamSelect" style="width:100%; padding:8px; margin-top:5px; font-size:1em;">
     <option value="rot">Rot</option>
     <option value="blau">Blau</option>
   </select>
-  <button id="joinBtn">Beitreten</button>
+  <button id="joinBtn" style="width:100%; padding:10px; margin-top:5px; font-size:1.1em;">Beitreten</button>
 </div>
 
 <div id="quizArea" style="display:none;">
@@ -64,7 +66,6 @@ let questions = [
   {category:"Allgemeinwissen", question:"Frage 3?", points:3, options:["A","B","C","D"], answer:2},
   {category:"Allgemeinwissen", question:"Frage 4?", points:4, options:["A","B","C","D"], answer:3},
   {category:"Allgemeinwissen", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0},
-  // weitere Kategorien hier hinzufügen
 ];
 
 // Spieler beitreten
@@ -78,7 +79,7 @@ document.getElementById('joinBtn').addEventListener('click', ()=>{
   });
 });
 
-// Quiz starten automatisch beim Start in Firebase
+// Quiz startet erst nach Admin Start
 gameState.onSnapshot(doc=>{
   const data = doc.data();
   if(data?.started) showQuestion(currentQ);
@@ -86,7 +87,7 @@ gameState.onSnapshot(doc=>{
 
 function showQuestion(index){
   if(index >= questions.length){
-    document.getElementById('quizArea').innerHTML="<h2>Danke fürs Mitmachen! 🍺</h2>";
+    document.getElementById('quizArea').innerHTML="<h2>Yoo Digga, Feierabend! Danke für's mitmachen 🍺</h2>";
     return;
   }
   const q = questions[index];
@@ -116,7 +117,7 @@ function showQuestion(index){
     optionsDiv.appendChild(div);
   });
 
-  // Timer 15 Sekunden
+  // Timer pro Frage
   let time=15;
   document.getElementById('timer').textContent=time;
   clearInterval(timerInterval);
@@ -127,6 +128,5 @@ function showQuestion(index){
   },1000);
 }
 </script>
-
 </body>
 </html>
