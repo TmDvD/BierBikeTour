@@ -67,7 +67,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-around;
+  justify-content: flex-start;
   align-items: center;
   padding: 10px;
   display: none;
@@ -76,6 +76,13 @@ body {
   font-size: 2em;
   font-weight: bold;
   margin-top: 10px;
+  text-align: center;
+}
+.categoryRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 90%;
 }
 .category {
   font-weight: bold;
@@ -83,18 +90,8 @@ body {
   padding: 10px;
   border-radius: 5px;
   text-align: center;
-  width: 90%;
-}
-.questionWrapper {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 90%;
-}
-#questionText {
-  font-size: 1.2em;
-  text-align: center;
-  flex: 1;
+  flex:1;
+  margin-right:10px;
 }
 #pointsCircle {
   width: 60px;
@@ -105,9 +102,13 @@ body {
   justify-content:center;
   align-items:center;
   font-weight:bold;
-  margin-left:10px;
   text-align:center;
   flex-shrink:0;
+}
+#questionText {
+  font-size: 1.2em;
+  text-align: center;
+  margin: 15px 0;
 }
 #options {
   display: flex;
@@ -147,12 +148,11 @@ body {
 <!-- Quizbereich -->
 <div id="quizArea">
   <div id="timer">15</div>
-  <div id="categoryTitle" class="category" style="background:#f88">Kategorie</div>
-  <hr style="width:90%; border:1px solid #ccc;">
-  <div class="questionWrapper">
-    <div id="questionText">Frage</div>
-    <div id="pointsCircle"><span id="pointsNumber">1</span><br>Punkte</div>
+  <div class="categoryRow">
+    <div id="categoryTitle" class="category" style="background:#f88">Kategorie</div>
+    <div id="pointsCircle"><span id="pointsNumber">1</span><br>P</div>
   </div>
+  <div id="questionText">Frage</div>
   <div id="options"></div>
 </div>
 
@@ -174,13 +174,13 @@ let currentQ = 0;
 let timerInterval;
 let selectedTeam = null;
 
-// Beispiel-Questions
+// Beispiel-Questions mit Farben
 let questions = [
-  {category:"Allgemeinwissen", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
-  {category:"Allgemeinwissen", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
-  {category:"Allgemeinwissen", question:"Frage 3?", points:3, options:["A","B","C","D"], answer:2},
-  {category:"Allgemeinwissen", question:"Frage 4?", points:4, options:["A","B","C","D"], answer:3},
-  {category:"Allgemeinwissen", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0},
+  {category:"Allgemeinwissen", color:"#f88", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
+  {category:"Sport", color:"#8f8", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
+  {category:"Geschichte", color:"#88f", question:"Frage 3?", points:3, options:["A","B","C","D"], answer:2},
+  {category:"Kultur", color:"#ff8", question:"Frage 4?", points:4, options:["A","B","C","D"], answer:3},
+  {category:"Wissenschaft", color:"#f8f", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0},
 ];
 
 // Teamwahl
@@ -215,7 +215,9 @@ function showQuestion(index){
     return;
   }
   const q = questions[index];
-  document.getElementById('categoryTitle').textContent = q.category;
+  const catEl = document.getElementById('categoryTitle');
+  catEl.textContent = q.category;
+  catEl.style.background = q.color;
   document.getElementById('questionText').textContent = q.question;
   document.getElementById('pointsNumber').textContent = q.points;
 
@@ -246,8 +248,13 @@ function showQuestion(index){
   clearInterval(timerInterval);
   timerInterval = setInterval(()=>{
     time--;
+    if(time<=0){ 
+      clearInterval(timerInterval);
+      currentQ++;
+      showQuestion(currentQ);
+      return;
+    }
     document.getElementById('timer').textContent=time;
-    if(time<=0){ clearInterval(timerInterval); currentQ++; showQuestion(currentQ);}
   },1000);
 }
 </script>
