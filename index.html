@@ -184,6 +184,13 @@ document.getElementById("joinBtn").addEventListener("click", async () => {
   if(!existing.empty) { alert("Name schon vergeben!"); return; }
   if(!selectedTeam){ alert("Bitte Team wählen!"); return; }
 
+  // Prüfen, ob ein Spiel bereits läuft
+  const gameDoc = await gameState.get();
+  if(gameDoc.exists && gameDoc.data().started){
+    alert("Ein Spiel läuft gerade. Du kannst nicht beitreten!");
+    return;
+  }
+
   const docRef = await playersCol.add({name,team:selectedTeam,score:0});
   currentPlayerId = docRef.id;
 
@@ -195,6 +202,7 @@ document.getElementById("joinBtn").addEventListener("click", async () => {
 gameState.onSnapshot(doc=>{
   const data = doc.data();
   if(!data) return;
+
   if(data.gameReset){
     // Reset → zurück zur Anmeldung
     document.getElementById("quizArea").style.display="none";
@@ -205,8 +213,20 @@ gameState.onSnapshot(doc=>{
     if(currentPlayerId){ playersCol.doc(currentPlayerId).delete(); currentPlayerId=null; }
     gameState.update({gameReset:false});
   }
+
   if(data.started){
-    startCountdown(5); // Nur Admin triggert Start
+    // Countdown nur anzeigen, wenn angemeldeter Spieler
+    if(currentPlayerId){
+      startCountdown(5);
+    } else {
+      // Nicht angemeldete Spieler sehen Hinweis
+      document.getElementById("joinArea").style.display="none";
+      document.getElementById("waitingArea").style.display="block";
+      document.getElementById("waitingArea").innerHTML = `
+        <img id="waitingLogo" src="Bilder/logo_lightmode.png" alt="Logo">
+        <p>Ein Spiel läuft gerade. Du kannst nicht beitreten.</p>
+      `;
+    }
   }
 });
 
