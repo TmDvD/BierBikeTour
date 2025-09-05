@@ -14,17 +14,54 @@ html, body {
 body {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   background: #fafafa;
 }
-#name-team {
-  width: 90%;
-  margin-top: 20px;
+
+/* Anmeldemaske mittig */
+#joinArea {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  width: 90%;
+  gap: 15px;
 }
+#joinArea input {
+  width: 100%;
+  padding: 15px;
+  font-size: 1.2em;
+  border-radius: 8px;
+  box-sizing: border-box;
+}
+
+/* Teamwahl */
+#teamSelect {
+  display: flex;
+  width: 100%;
+  justify-content: space-around;
+}
+.teamOption {
+  width: 45%;
+  padding: 15px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  color: white;
+  user-select: none;
+  transition: all 0.2s;
+}
+.teamOption.red { background: #f44; }
+.teamOption.blue { background: #44f; }
+.teamOption.selected {
+  filter: brightness(1.2);
+  border: 3px solid #000;
+}
+
+/* Quizbereich */
 #quizArea {
   width: 100%;
   flex: 1;
@@ -33,6 +70,7 @@ body {
   justify-content: space-around;
   align-items: center;
   padding: 10px;
+  display: none;
 }
 #timer {
   font-size: 2em;
@@ -85,6 +123,10 @@ body {
   background: #eee;
   cursor: pointer;
   user-select: none;
+  transition: all 0.2s;
+}
+#options div:hover {
+  background: #ddd;
 }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -92,16 +134,18 @@ body {
 </head>
 <body>
 
-<div id="name-team">
+<!-- Anmeldemaske -->
+<div id="joinArea">
   <input type="text" id="playerName" placeholder="Dein Name">
-  <select id="teamSelect">
-    <option value="rot">Rot</option>
-    <option value="blau">Blau</option>
-  </select>
+  <div id="teamSelect">
+    <div class="teamOption red" data-team="rot">Rot</div>
+    <div class="teamOption blue" data-team="blau">Blau</div>
+  </div>
   <button id="joinBtn">Beitreten</button>
 </div>
 
-<div id="quizArea" style="display:none;">
+<!-- Quizbereich -->
+<div id="quizArea">
   <div id="timer">15</div>
   <div id="categoryTitle" class="category" style="background:#f88">Kategorie</div>
   <hr style="width:90%; border:1px solid #ccc;">
@@ -128,7 +172,9 @@ const gameState = db.collection('game').doc('state');
 
 let currentQ = 0;
 let timerInterval;
+let selectedTeam = null;
 
+// Beispiel-Questions
 let questions = [
   {category:"Allgemeinwissen", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
   {category:"Allgemeinwissen", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
@@ -137,13 +183,22 @@ let questions = [
   {category:"Allgemeinwissen", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0},
 ];
 
+// Teamwahl
+document.querySelectorAll('.teamOption').forEach(opt=>{
+  opt.addEventListener('click', ()=>{
+    document.querySelectorAll('.teamOption').forEach(e=>e.classList.remove('selected'));
+    opt.classList.add('selected');
+    selectedTeam = opt.dataset.team;
+  });
+});
+
 // Spieler beitreten
 document.getElementById('joinBtn').addEventListener('click', ()=>{
   const name = document.getElementById('playerName').value.trim();
-  const team = document.getElementById('teamSelect').value;
   if(!name) return alert("Bitte Name eingeben!");
-  playersCol.add({name, team, score:0}).then(()=>{
-    document.getElementById('name-team').style.display='none';
+  if(!selectedTeam) return alert("Bitte ein Team wählen!");
+  playersCol.add({name, team: selectedTeam, score:0}).then(()=>{
+    document.getElementById('joinArea').style.display='none';
     document.getElementById('quizArea').style.display='flex';
   });
 });
