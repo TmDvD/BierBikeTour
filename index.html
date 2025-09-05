@@ -140,7 +140,7 @@ input, button {
 </div>
 <div id="waitingArea" style="display:none;">
     <img id="waitingLogo" src="Bilder/logo_lightmode.png" alt="Logo">
-    <p id="waitingMessage">Chillt mal euere Base, geht gleich sofort weiter...</p>
+    <p id="waitingMessage">Bitte warten, der Admin startet das Spiel…</p>
 </div>
 <div id="quizArea" style="display:none;">
     <div id="playerScore">Punkte: 0</div>
@@ -282,14 +282,14 @@ document.getElementById("joinBtn").addEventListener("click", async ()=>{
     if(!name||name.length>10){ alert("Ungültiger Name (max 10 Zeichen)!"); return; }
     if(!selectedTeam){ alert("Bitte Team wählen!"); return; }
     const existing=await playersCol.where("name","==",name).get();
-    if(!existing.empty){ alert("Name schon vergeben!"); return; }
+    if(!existing.empty){ alert("Mach jetzt nich den!"); return; }
     const gameDoc=await gameState.get();
-    if(gameDoc.exists && gameDoc.data().started){ alert("Ein Spiel läuft gerade. Du kannst nicht beitreten!"); return; }
+    if(gameDoc.exists && gameDoc.data().started){ alert("Nee Bruder, du warst einfach zu langsam!!!"); return; }
     const docRef=await playersCol.add({name,team:selectedTeam,score:0});
     currentPlayerId=docRef.id;
     document.getElementById("joinArea").style.display="none";
     document.getElementById("waitingArea").style.display="block";
-    document.getElementById("waitingMessage").textContent="Das Spiel wird gleich durch den Admin gestartet…";
+    document.getElementById("waitingMessage").textContent="Chillt mal eure Base, es geht sofort weiter...";
 });
 
 // GameState Listener
