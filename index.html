@@ -29,6 +29,10 @@ body {
   width: 90%;
   gap: 15px;
 }
+#joinArea img {
+  max-width: 150px;
+  margin-bottom: 15px;
+}
 #joinArea input, #joinArea button {
   width: 100%;
   padding: 15px;
@@ -59,6 +63,9 @@ body {
 .teamOption.selected {
   filter: brightness(1.2);
   border: 3px solid #000;
+}
+.teamOption.unselected {
+  filter: grayscale(80%);
 }
 
 /* Quizbereich */
@@ -138,7 +145,9 @@ body {
 
 <!-- Anmeldemaske -->
 <div id="joinArea">
-  <input type="text" id="playerName" placeholder="Dein Name">
+  <!-- Logo automatisch je nach Light/Dark Mode -->
+  <img id="logo" src="Bilder/logo_lightmode.png" alt="Bierbike Quiz Logo">
+  <input type="text" id="playerName" placeholder="Dein Name (max.10)" maxlength="10">
   <div id="teamSelect">
     <div class="teamOption red" data-team="rot">Rot</div>
     <div class="teamOption blue" data-team="blau">Blau</div>
@@ -184,20 +193,39 @@ let questions = [
   {category:"Wissenschaft", color:"#f8f", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0},
 ];
 
+// Light/Dark Mode Logo
+const logo = document.getElementById('logo');
+if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+  logo.src = 'Bilder/logo_darkmode.png';
+}
+
 // Teamwahl
-document.querySelectorAll('.teamOption').forEach(opt=>{
+const teamOptions = document.querySelectorAll('.teamOption');
+teamOptions.forEach(opt=>{
   opt.addEventListener('click', ()=>{
-    document.querySelectorAll('.teamOption').forEach(e=>e.classList.remove('selected'));
-    opt.classList.add('selected');
     selectedTeam = opt.dataset.team;
+    teamOptions.forEach(e=>{
+      e.classList.remove('selected','unselected');
+      if(e.dataset.team !== selectedTeam) e.classList.add('unselected');
+    });
+    opt.classList.add('selected');
   });
 });
 
-// Spieler beitreten
-document.getElementById('joinBtn').addEventListener('click', ()=>{
-  const name = document.getElementById('playerName').value.trim();
+// Spieler beitreten mit Namensprüfung
+document.getElementById('joinBtn').addEventListener('click', async ()=>{
+  let name = document.getElementById('playerName').value.trim();
+
   if(!name) return alert("Bitte Name eingeben!");
+  if(name.length > 10) name = name.slice(0,10);
   if(!selectedTeam) return alert("Bitte ein Team wählen!");
+
+  // Doppelname prüfen
+  const snapshot = await playersCol.where('name','==',name).get();
+  if(!snapshot.empty){
+    return alert("Name bereits vergeben, bitte anderen wählen!");
+  }
+
   playersCol.add({name, team: selectedTeam, score:0}).then(()=>{
     document.getElementById('joinArea').style.display='none';
     document.getElementById('quizArea').style.display='flex';
