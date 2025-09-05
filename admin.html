@@ -40,16 +40,21 @@ input, button {
   padding: 10px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   color: white;
+  display: flex;
+  flex-direction: column;
 }
 .teamBox.red { background: #d9534f; }
 .teamBox.blue { background: #0275d8; }
 .player {
-  margin: 5px 0;
-  padding: 8px;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.2);
   display: flex;
   justify-content: space-between;
+  align-items: center; /* vertikal zentriert */
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.2);
+  min-height: 50px; /* gleiche Höhe */
+  box-sizing: border-box;
 }
 .player .score {
   font-weight: bold;
@@ -62,6 +67,9 @@ input, button {
 }
 #controlButtons button {
   flex: 1;
+  background:#e0e0e0; /* dezente Farbe */
+  color:#333;
+  border:1px solid #ccc;
 }
 #timer {
   font-size: 1.6em;
@@ -98,8 +106,8 @@ input, button {
   </div>
 
   <div id="controlButtons">
-    <button id="startBtn" style="background:#28a745;color:white;">Start Quiz</button>
-    <button id="resetBtn" style="background:#d9534f;color:white;">Reset</button>
+    <button id="startBtn">Start Quiz</button>
+    <button id="resetBtn">Reset</button>
   </div>
 </div>
 
