@@ -53,7 +53,7 @@ input, button {
   margin-top: 40px;
 }
 #questionHeader {
-  background: #e0f7fa; /* Kategorie leicht farbig */
+  background: #b2ebf2; /* stärkerer Kategorie-Balken */
   padding: 10px;
   border-radius: 8px;
   display: flex;
@@ -83,6 +83,8 @@ input, button {
   background: #fff;
   transition: background 0.3s, transform 0.3s;
 }
+.answerBtn.correct { background-color: #a2d5a2; } /* weniger kräftiges Grün */
+.answerBtn.wrong { background-color: #f4a2a2; }   /* weniger kräftiges Rot */
 #countdownOverlay {
   position: fixed;
   top:0;
@@ -156,6 +158,8 @@ let currentPlayerId = null;
 let score = 0;
 let currentQuestionIndex = 0;
 let currentQuestionSet = 0;
+let questionTimer;
+const questionDuration = 15;
 
 // Darkmode-Logo
 if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -274,12 +278,26 @@ function startCountdown(sec){
 
 // Frage anzeigen
 function showQuestion(){
+  clearInterval(questionTimer);
   const qSet = questions[currentQuestionSet];
   const q = qSet.questions[currentQuestionIndex];
   document.getElementById("categoryName").textContent = qSet.category;
   document.getElementById("questionText").textContent = q.text;
   const answersDiv = document.getElementById("answers");
   answersDiv.innerHTML = "";
+
+  let timeLeft = questionDuration;
+  const timerEl = document.getElementById("timer");
+  timerEl.textContent = timeLeft;
+  questionTimer = setInterval(()=>{
+    timeLeft--;
+    timerEl.textContent = timeLeft;
+    if(timeLeft <= 0){
+      clearInterval(questionTimer);
+      autoNextQuestion();
+    }
+  },1000);
+
   q.answers.forEach(a=>{
     const btn = document.createElement("button");
     btn.textContent = a.text;
@@ -292,37 +310,44 @@ function showQuestion(){
 
 // Antwort prüfen
 function selectAnswer(btn, correct){
+  clearInterval(questionTimer);
   const buttons = document.querySelectorAll(".answerBtn");
   buttons.forEach(b=>{
     b.disabled=true;
-    if(b.dataset.correct==="true") b.style.backgroundColor="#28a745";
+    if(b.dataset.correct==="true") b.classList.add("correct");
   });
+  const points = currentQuestionIndex+1;
   if(correct){
-    btn.style.backgroundColor="#28a745";
-    score++;
-    animateScore();
+    btn.classList.add("correct");
+    score+=points;
+    document.getElementById("playerScore").textContent = "Punkte: "+score;
+    animateScore(points);
   } else {
-    btn.style.backgroundColor="#dc3545";
+    btn.classList.add("wrong");
   }
 
-  setTimeout(()=>{
-    currentQuestionIndex++;
-    if(currentQuestionIndex>=questions[currentQuestionSet].questions.length){
-      currentQuestionIndex=0;
-      alert("Kategorie abgeschlossen!");
-      // nächste Kategorie oder Ende
-    } else showQuestion();
-  },1000);
+  setTimeout(autoNextQuestion,1000);
+}
+
+function autoNextQuestion(){
+  currentQuestionIndex++;
+  const qSet = questions[currentQuestionSet];
+  if(currentQuestionIndex >= qSet.questions.length){
+    currentQuestionIndex = 0;
+    alert("Kategorie abgeschlossen!");
+  } else {
+    showQuestion();
+  }
 }
 
 // Score Animation
-function animateScore(){
+function animateScore(points){
   const scoreEl = document.getElementById("playerScore");
   scoreEl.style.transform="scale(1.3)";
   setTimeout(()=>scoreEl.style.transform="scale(1)",300);
 
   const plus = document.createElement("span");
-  plus.textContent="+1";
+  plus.textContent="+"+points;
   plus.style.position="absolute";
   plus.style.color="#28a745";
   plus.style.fontWeight="bold";
