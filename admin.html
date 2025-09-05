@@ -12,14 +12,13 @@ body {
   background: #f4f4f4;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   min-height: 100vh;
 }
-#loginArea, #adminArea {
+.container {
   width: 95%;
-  max-width: 600px;
+  max-width: 500px;
   text-align: center;
-  margin-top: 30px;
 }
 input, button {
   width: 100%;
@@ -33,7 +32,7 @@ input, button {
 #teamContainer {
   display: flex;
   justify-content: space-between;
-  margin-top: 20px;
+  margin: 20px 0;
 }
 .teamBox {
   flex: 0 0 48%;
@@ -43,38 +42,38 @@ input, button {
   color: white;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 .teamBox.red { background: #d9534f; }
 .teamBox.blue { background: #0275d8; }
 .player {
   display: flex;
   justify-content: space-between;
-  align-items: center; /* vertikal zentriert */
+  align-items: center;
+  width: 100%;
   padding: 0 10px;
   margin: 5px 0;
   border-radius: 6px;
   background: rgba(255,255,255,0.2);
-  height: 50px; /* exakt gleiche Höhe wie Button */
+  height: 50px;
 }
 .player .score {
   font-weight: bold;
 }
 #controlButtons {
-  margin-top: 25px;
+  margin-top: 20px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 10px;
 }
 #controlButtons button {
-  flex: 1;
   padding: 0;
   font-size: 1.2em;
-  height: 50px; /* exakt gleiche Höhe wie Spielerfelder */
+  height: 50px;
   border-radius: 10px;
   border: 1px solid #ccc;
   background:#e0e0e0;
   color:#333;
-  margin: 0;
 }
 #timer {
   font-size: 1.6em;
@@ -87,14 +86,14 @@ input, button {
 </head>
 <body>
 
-<div id="loginArea">
+<div class="container" id="loginArea">
   <h1>Bierbike Quiz</h1>
   <h2>Admin</h2>
   <input type="password" id="adminPw" placeholder="Passwort">
   <button id="loginBtn">Login</button>
 </div>
 
-<div id="adminArea" style="display:none;">
+<div class="container" id="adminArea" style="display:none;">
   <h1>Bierbike Quiz</h1>
   <h2>Admin</h2>
   <div id="timer">Noch nicht gestartet</div>
@@ -178,7 +177,7 @@ gameState.onSnapshot(doc=>{
   const data=doc.data();
   if(!data) return;
   if(data.started && !data.countdownStarted){
-    startMainTimer(600); // z.B. 10 Minuten Timer
+    startMainTimer(600);
     gameState.set({countdownStarted:true},{merge:true});
   }
 });
