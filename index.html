@@ -2,88 +2,51 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Bierbike Quiz</title>
+<title>Bierbike Quiz - Player</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <style>
-body {
-  margin: 0;
-  font-family: sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  background: #f9f9f9;
-}
-#joinArea, #waitingArea, #countdownArea {
-  text-align: center;
-  width: 90%;
-  max-width: 400px;
-}
-input {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  font-size: 1em;
-  box-sizing: border-box;
-}
-.teamChoice {
-  display: flex;
-  justify-content: space-around;
-  margin: 15px 0;
-}
-.teamBtn {
-  flex: 0 0 45%;
-  padding: 15px;
-  border-radius: 10px;
-  font-size: 1.1em;
-  font-weight: bold;
-  cursor: pointer;
-  color: white;
-  border: 2px solid transparent;
-  transition: all 0.2s;
-}
-.teamBtn.red { background: #d9534f; }
-.teamBtn.blue { background: #0275d8; }
-.teamBtn.disabled { opacity: 0.4; pointer-events: none; }
-.teamBtn.active { border: 3px solid #333; opacity: 1; }
-button {
-  width: 100%;
-  padding: 12px;
-  font-size: 1.1em;
-  border-radius: 8px;
-  border: none;
-  background: #28a745;
-  color: white;
-  margin-top: 10px;
-  cursor: pointer;
-}
-h1 { margin-bottom: 20px; }
-#countdownArea { display:none; font-size: 2em; font-weight:bold; }
+* { box-sizing: border-box; margin:0; padding:0; }
+body { font-family:sans-serif; background:#f4f4f4; display:flex; justify-content:center; align-items:center; min-height:100vh; }
+.container { width:95%; max-width:500px; text-align:center; }
+input, button { width:100%; padding:15px; font-size:1.2em; margin:10px 0; border-radius:10px; border:1px solid #ccc; box-sizing:border-box; }
+button { background:#e0e0e0; color:#333; cursor:pointer; }
+#loginArea, #quizArea { display:flex; flex-direction:column; align-items:center; }
+#playerList { margin-top:20px; width:100%; }
+.player { display:flex; justify-content:space-between; align-items:center; padding:0 10px; margin:5px 0; border-radius:6px; background:rgba(255,255,255,0.2); height:50px; }
+.player .score { font-weight:bold; }
+#timer { font-size:2em; margin:15px 0; font-weight:bold; transition: color 0.5s; }
+.categoryBar { width:100%; display:flex; justify-content:space-between; align-items:center; padding:5px 10px; color:white; border-radius:5px; margin:10px 0; }
+.categoryBar span.points { font-weight:bold; }
+.questionBox { background:white; border-radius:10px; padding:15px; margin-bottom:15px; width:100%; }
+.answer { background:#f0f0f0; padding:10px; border-radius:6px; margin:5px 0; cursor:pointer; }
+.answer.correct { background:#c8e6c9; }
+.answer.wrong { background:#f8d7da; }
+.plusAnim { position:absolute; color:green; font-weight:bold; animation:moveUp 0.6s forwards; }
+@keyframes moveUp { 0% { opacity:1; transform:translateY(0);} 100% { opacity:0; transform:translateY(-20px);} }
 </style>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
-
-<div id="joinArea">
+<div class="container" id="loginArea">
   <h1>Bierbike Quiz</h1>
-  <img id="logo" src="Bilder/logo_lightmode.png" alt="Logo" width="150">
-  <input type="text" id="playerName" placeholder="Dein Name (max 10 Zeichen)">
-  <div class="teamChoice">
-    <div id="redBtn" class="teamBtn red">Rot</div>
-    <div id="blueBtn" class="teamBtn blue">Blau</div>
+  <input type="text" id="playerName" placeholder="Name (max 10)" maxlength="10">
+  <div style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
+    <button class="teamSelect" data-team="rot">Rot</button>
+    <button class="teamSelect" data-team="blau">Blau</button>
   </div>
   <button id="joinBtn">Beitreten</button>
 </div>
 
-<div id="waitingArea" style="display:none;">
-  <h2>Bitte warten...</h2>
-  <p>Das Spiel startet gleich.</p>
+<div class="container" id="quizArea" style="display:none;">
+  <div id="timer">0</div>
+  <div id="categoryBar" class="categoryBar" style="background:green;">
+    <span id="categoryName">Kategorie</span>
+    <span class="points" id="questionPoints">0 P.</span>
+  </div>
+  <div class="questionBox" id="questionText">Frage erscheint hier</div>
+  <div id="answers"></div>
 </div>
-
-<div id="countdownArea"></div>
 
 <script>
 const firebaseConfig = {
@@ -99,97 +62,109 @@ const db = firebase.firestore();
 const playersCol = db.collection("players");
 const gameState = db.collection("game").doc("state");
 
-// Dark/Light Mode Logo
-function setLogo(){
-  if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches){
-    document.getElementById("logo").src="Bilder/logo_darkmode.png";
-  } else {
-    document.getElementById("logo").src="Bilder/logo_lightmode.png";
-  }
-}
-setLogo();
-window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setLogo);
+let playerName="", playerTeam="", playerScore=0;
+let currentQ=0;
+let questions=[
+  {category:"Geografie", text:"Was Stadt ist die Hauptstadt von Frankreich?", answers:["Rom","Berlin","Paris","Madrid"], correct:2, points:1},
+  {category:"Geografie", text:"Welches Land ist flächenmäßig das größte der Erde?", answers:["Kanada","Russland","USA","China"], correct:1, points:2},
+  {category:"Geografie", text:"Welcher Fluss fließt durch Budapest?", answers:["Rhein","Elbe","Donau","Po"], correct:2, points:3},
+  {category:"Geografie", text:"Welches Land hat keine Küste?", answers:["Bolivien","Peru","Kroatien","Thailand"], correct:0, points:4},
+  {category:"Geografie", text:"In welchem Land liegt der höchste aktive Vulkan der Erde, der Ojos del Salado?", answers:["Chile","Indonesien","Italien","Äthiopien"], correct:0, points:5}
+];
 
-// Spieler blockieren, wenn Spiel läuft
-gameState.get().then(doc=>{
-  const data = doc.data();
-  if(data && data.started){
-    document.getElementById("joinArea").innerHTML="<h2>Es läuft gerade ein Spiel – bitte warten bis zum nächsten!</h2>";
-  }
+// Teamwahl Buttons
+document.querySelectorAll(".teamSelect").forEach(btn=>{
+  btn.addEventListener("click", e=>{
+    playerTeam=e.target.dataset.team;
+    document.querySelectorAll(".teamSelect").forEach(b=>b.style.opacity=b.dataset.team===playerTeam?"1":"0.5");
+    document.querySelectorAll(".teamSelect").forEach(b=>b.style.border=b.dataset.team===playerTeam?"2px solid #333":"none");
+  });
 });
 
-// Team Auswahl
-let selectedTeam=null;
-document.getElementById("redBtn").addEventListener("click",()=>{
-  selectedTeam="rot";
-  document.getElementById("redBtn").classList.add("active");
-  document.getElementById("blueBtn").classList.remove("active");
-  document.getElementById("blueBtn").classList.add("disabled");
-  document.getElementById("redBtn").classList.remove("disabled");
-});
-document.getElementById("blueBtn").addEventListener("click",()=>{
-  selectedTeam="blau";
-  document.getElementById("blueBtn").classList.add("active");
-  document.getElementById("redBtn").classList.remove("active");
-  document.getElementById("redBtn").classList.add("disabled");
-  document.getElementById("blueBtn").classList.remove("disabled");
-});
-
-// Spieler beitreten
 document.getElementById("joinBtn").addEventListener("click", async ()=>{
-  const name=document.getElementById("playerName").value.trim();
-  if(name==="" || name.length>10){
-    alert("Ungültiger Name (leer oder länger als 10 Zeichen).");
-    return;
-  }
-  if(!selectedTeam){
-    alert("Bitte ein Team auswählen!");
-    return;
-  }
-  const exists=await playersCol.where("name","==",name).get();
-  if(!exists.empty){
-    alert("Name schon vergeben!");
-    return;
-  }
-  await playersCol.add({name:name, team:selectedTeam, score:0});
-  document.getElementById("joinArea").style.display="none";
-  document.getElementById("waitingArea").style.display="block";
+  playerName=document.getElementById("playerName").value.trim();
+  if(!playerName || playerName.length>10){alert("Name max. 10 Zeichen"); return;}
+  if(!playerTeam){alert("Team wählen!"); return;}
+  
+  // Prüfen auf Duplikate
+  const snap=await playersCol.where("name","==",playerName).get();
+  if(!snap.empty){alert("Name bereits vergeben"); return;}
+  
+  await playersCol.doc(playerName).set({name:playerName,team:playerTeam,score:0});
+  document.getElementById("loginArea").style.display="none";
+  document.getElementById("quizArea").style.display="flex";
+  listenGameStart();
 });
 
-// Zurücksetzen Event -> Spieler raus (einmalig)
-gameState.onSnapshot(async doc=>{
-  const data = doc.data();
-  if(!data) return;
-
-  // Spieler neu laden nach Reset
-  if(data.gameReset){
-    await gameState.set({gameReset:false},{merge:true});
-    location.reload();
-  }
-
-  // Start Event
-  if(data.started && !data.countdownStarted){
-    // Countdown 5 Sekunden
-    document.getElementById("waitingArea").style.display="none";
-    document.getElementById("countdownArea").style.display="block";
-    let sec=5;
-    const countdownDiv = document.getElementById("countdownArea");
-    const interval = setInterval(()=>{
-      countdownDiv.innerText=sec;
-      // Farbe von grün nach rot
-      countdownDiv.style.color = `rgb(${Math.floor(255*(5-sec)/5)},${Math.floor(255*sec/5)},0)`;
-      sec--;
-      if(sec<0){
-        clearInterval(interval);
-        countdownDiv.style.display="none";
-        // Hier könnte Quiz gestartet werden
-        document.body.innerHTML = "<h1>Quiz gestartet!</h1>";
-      }
-    },1000);
-    // Setze CountdownFlag um nicht erneut zu starten
-    await gameState.set({countdownStarted:true},{merge:true});
-  }
+// Spieler-Score live
+playersCol.doc(playerName).onSnapshot(doc=>{
+  if(!doc.exists) return;
+  playerScore=doc.data().score||0;
 });
+
+// Quizstart
+function listenGameStart(){
+  gameState.onSnapshot(doc=>{
+    const data=doc.data();
+    if(data && data.started){
+      startCountdown();
+    }
+  });
+}
+
+// Countdown vor Spiel
+function startCountdown(){
+  let sec=5;
+  const timerEl=document.getElementById("timer");
+  const colors=["darkgreen","lightgreen","yellow","orange","red"];
+  timerEl.innerText=sec;
+  let int=setInterval(()=>{
+    sec--;
+    if(sec<0){ clearInterval(int); showQuestion(); return; }
+    timerEl.innerText=sec;
+    timerEl.style.color=colors[5-sec>=colors.length?colors.length-1:5-sec];
+  },1000);
+}
+
+// Frage anzeigen
+function showQuestion(){
+  if(currentQ>=questions.length){document.getElementById("timer").innerText="Feierabend!"; return;}
+  const q=questions[currentQ];
+  document.getElementById("categoryName").innerText=q.category;
+  document.getElementById("questionText").innerText=q.text;
+  document.getElementById("questionPoints").innerText=q.points + (q.points>1?" P.":" P.");
+  const answersDiv=document.getElementById("answers");
+  answersDiv.innerHTML="";
+  q.answers.forEach((a,i)=>{
+    const btn=document.createElement("div");
+    btn.className="answer";
+    btn.innerText=a;
+    btn.addEventListener("click",()=>{
+      if(i===q.correct){
+        addPoints(q.points);
+        btn.classList.add("correct");
+      } else { btn.classList.add("wrong"); }
+      setTimeout(()=>{ currentQ++; showQuestion(); },1500);
+    });
+    answersDiv.appendChild(btn);
+  });
+}
+
+// Punkte Animation
+function addPoints(p){
+  const playerRef=playersCol.doc(playerName);
+  playerScore+=p;
+  playerRef.update({score:playerScore});
+  const timerEl=document.getElementById("timer");
+  const plus=document.createElement("span");
+  plus.className="plusAnim";
+  plus.innerText="+"+p;
+  plus.style.position="absolute";
+  plus.style.left=(timerEl.offsetLeft+50)+"px";
+  plus.style.top=(timerEl.offsetTop-20)+"px";
+  document.body.appendChild(plus);
+  setTimeout(()=>{document.body.removeChild(plus);},600);
+}
 </script>
 </body>
 </html>
