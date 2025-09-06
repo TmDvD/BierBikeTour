@@ -57,20 +57,23 @@ document.getElementById('startBtn')?.addEventListener('click', ()=>{
 // --- Fragen anzeigen ---
 gameState.onSnapshot(doc=>{
   const data = doc.data();
-  // Nur wenn gestartet und noch Fragen offen sind
-  if(data?.started && currentQ < questions.length){
-    showQuestion(currentQ);
+  if(data?.started){
+    currentQ = data.currentQuestion ?? 0;
+
+    if(currentQ < questions.length){
+      showQuestion(currentQ);
+    } else {
+      // Nur am echten Ende Overlay anzeigen
+      document.getElementById('quizArea').style.display = 'none';
+      document.getElementById('endOverlay').style.display = 'flex';
+    }
   }
 });
 
 function showQuestion(index){
-  if(index >= questions.length){
-    // QUIZ BEENDET → Endoverlay anzeigen
-    document.getElementById('quizArea').style.display = 'none';
-    document.getElementById('endOverlay').style.display = 'flex';
-    return;
-  }
   const q = questions[index];
+  if(!q) return;
+
   document.getElementById('categoryTitle').textContent = q.category;
   document.getElementById('questionText').textContent = q.question;
   document.getElementById('pointsNumber').textContent = q.points;
@@ -91,8 +94,7 @@ function showQuestion(index){
           docRef.ref.update({score:newScore});
         }
       }
-      currentQ++;
-      showQuestion(currentQ);
+      gameState.update({ currentQuestion: index+1 });
     });
     optionsDiv.appendChild(div);
   });
@@ -106,8 +108,7 @@ function showQuestion(index){
     document.getElementById('timer').textContent=time;
     if(time<=0){ 
       clearInterval(timerInterval); 
-      currentQ++; 
-      showQuestion(currentQ);
+      gameState.update({ currentQuestion: index+1 });
     }
   },1000);
 }
@@ -116,7 +117,7 @@ function showQuestion(index){
 document.getElementById('backToStartBtn')?.addEventListener('click', ()=>{
   document.getElementById('endOverlay').style.display='none';
   document.getElementById('quizArea').style.display='none';
-  document.getElementById('joinArea').style.display='block'; // dein Startbildschirm
+  document.getElementById('joinArea').style.display='block';
   currentQ = 0;
 });
 </script>
