@@ -183,6 +183,14 @@ if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matche
     document.getElementById("waitingLogo").src="Bilder/logo_darkmode.png";
 }
 
+// 🔹 Warnung beim Neuladen/Schließen
+window.addEventListener("beforeunload", (event) => {
+    if(currentPlayerId){
+        event.preventDefault();
+        event.returnValue = "Wenn du die Seite verlässt, verlierst du deinen Platz im Spiel. Bist du sicher, dass du neuladen willst?";
+    }
+});
+
 // Team-Auswahl
 document.getElementById("redBtn").addEventListener("click", ()=>selectTeam("rot"));
 document.getElementById("blueBtn").addEventListener("click", ()=>selectTeam("blau"));
