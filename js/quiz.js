@@ -6,7 +6,7 @@ const gameState = db.collection('game').doc('state');
 let currentQ = 0;
 let timerInterval;
 
-// --- Beispiel-Fragen ---
+// Beispiel-Fragen
 let questions = [
   {category:"Allgemeinwissen", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
   {category:"Allgemeinwissen", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
@@ -15,20 +15,19 @@ let questions = [
   {category:"Allgemeinwissen", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0}
 ];
 
-// --- Spieler beitreten ---
+// Spieler beitreten
 document.getElementById('joinBtn')?.addEventListener('click', () => {
   const name = document.getElementById('playerName').value.trim();
   const team = document.getElementById('teamSelect')?.value;
   if(!name) return alert("Bitte Name eingeben!");
   if(!team) return alert("Bitte Team auswählen!");
-
   playersCol.add({name, team, score:0}).then(()=>{
     document.getElementById('name-team').style.display='none';
     document.getElementById('quizArea').style.display='block';
   });
 });
 
-// --- Admin Lobby & Team-Punkte ---
+// Admin Lobby & Team-Punkte
 function updateLobbyAndScores(){
   playersCol.get().then(snapshot=>{
     let redScore=0, blueScore=0;
@@ -49,34 +48,42 @@ function updateLobbyAndScores(){
 }
 setInterval(updateLobbyAndScores,3000);
 
-// --- Quiz starten ---
+// Quiz starten
 document.getElementById('startBtn')?.addEventListener('click', ()=>{
   gameState.set({currentQuestion:0, started:true});
 });
 
-// --- Fragen anzeigen / Firestore Listener ---
+// Firestore Listener
 gameState.onSnapshot(doc=>{
   const data = doc.data();
   if(!data) return;
 
-  // Spiel muss gestartet sein
+  // Spiel läuft
   if(data.started === true){
     const dbQ = data.currentQuestion ?? 0;
 
+    // Quiz läuft
     if(dbQ < questions.length){
       currentQ = dbQ;
+      document.getElementById('endOverlay').style.display = 'none';
+      document.getElementById('quizArea').style.display = 'block';
       showQuestion(currentQ);
-    } else {
-      // Overlay nur anzeigen, wenn Quiz fertig und noch nicht sichtbar
-      if(document.getElementById('endOverlay').style.display === 'none'){
-        document.getElementById('quizArea').style.display = 'none';
-        document.getElementById('endOverlay').style.display = 'flex';
-      }
+    } 
+    // Quiz beendet
+    else {
+      document.getElementById('quizArea').style.display = 'none';
+      document.getElementById('endOverlay').style.display = 'flex';
     }
+  }
+  // Spiel noch nicht gestartet
+  else {
+    document.getElementById('quizArea').style.display = 'none';
+    document.getElementById('endOverlay').style.display = 'none';
+    document.getElementById('joinArea').style.display = 'block';
   }
 });
 
-// --- Frage anzeigen ---
+// Frage anzeigen
 function showQuestion(index){
   const q = questions[index];
   if(!q) return;
@@ -89,7 +96,7 @@ function showQuestion(index){
   optionsDiv.innerHTML = "";
   q.options.forEach((opt,i)=>{
     const div = document.createElement('div');
-    div.textContent = opt;
+    div.textContent=opt;
     div.className = "answerBtn";
     div.addEventListener('click', async ()=>{
       const playerName = document.getElementById('playerName').value;
@@ -107,7 +114,6 @@ function showQuestion(index){
     optionsDiv.appendChild(div);
   });
 
-  // Timer 15 Sekunden
   let time = 15;
   document.getElementById('timer').textContent = time;
   clearInterval(timerInterval);
@@ -121,7 +127,7 @@ function showQuestion(index){
   }, 1000);
 }
 
-// --- Endoverlay Button zurück zum Start ---
+// Endoverlay Button zurück zum Start
 document.getElementById('backToStartBtn')?.addEventListener('click', ()=>{
   document.getElementById('endOverlay').style.display = 'none';
   document.getElementById('quizArea').style.display = 'none';
