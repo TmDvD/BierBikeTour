@@ -57,7 +57,10 @@ document.getElementById('startBtn')?.addEventListener('click', ()=>{
 // --- Fragen anzeigen ---
 gameState.onSnapshot(doc=>{
   const data = doc.data();
-  if(data?.started) showQuestion(currentQ);
+  // Nur wenn gestartet und noch Fragen offen sind
+  if(data?.started && currentQ < questions.length){
+    showQuestion(currentQ);
+  }
 });
 
 function showQuestion(index){
@@ -101,7 +104,11 @@ function showQuestion(index){
   timerInterval = setInterval(()=>{
     time--;
     document.getElementById('timer').textContent=time;
-    if(time<=0){ clearInterval(timerInterval); currentQ++; showQuestion(currentQ);}
+    if(time<=0){ 
+      clearInterval(timerInterval); 
+      currentQ++; 
+      showQuestion(currentQ);
+    }
   },1000);
 }
 
