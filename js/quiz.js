@@ -1,3 +1,4 @@
+<script>
 // --- Firebase Reference ---
 const playersCol = db.collection('players');
 const gameState = db.collection('game').doc('state');
@@ -61,7 +62,9 @@ gameState.onSnapshot(doc=>{
 
 function showQuestion(index){
   if(index >= questions.length){
-    document.getElementById('quizArea').innerHTML="<h2>Danke fürs Mitmachen! 🍺</h2>";
+    // QUIZ BEENDET → Endoverlay anzeigen
+    document.getElementById('quizArea').style.display = 'none';
+    document.getElementById('endOverlay').style.display = 'flex';
     return;
   }
   const q = questions[index];
@@ -101,3 +104,12 @@ function showQuestion(index){
     if(time<=0){ clearInterval(timerInterval); currentQ++; showQuestion(currentQ);}
   },1000);
 }
+
+// --- Endoverlay Button zurück zum Start ---
+document.getElementById('backToStartBtn')?.addEventListener('click', ()=>{
+  document.getElementById('endOverlay').style.display='none';
+  document.getElementById('quizArea').style.display='none';
+  document.getElementById('joinArea').style.display='block'; // dein Startbildschirm
+  currentQ = 0;
+});
+</script>
