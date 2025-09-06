@@ -1,137 +1,103 @@
-<!-- Endoverlay -->
-<div id="endOverlay" style="
-  display:none;
-  position:fixed;
-  top:0; left:0; right:0; bottom:0;
-  background:rgba(0,0,0,0.7);
-  color:white;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-  z-index:3000;
-  text-align:center;
-">
-  <h2>Quiz beendet!</h2>
-  <p>Danke fürs Mitmachen 🍺</p>
-  <button id="backToStartBtn" style="
-    margin-top:20px;
-    padding:12px 24px;
-    font-size:1.2em;
-    border:none;
-    border-radius:10px;
-    background:#444;
-    color:white;
-    cursor:pointer;
-  ">Zurück zum Start</button>
-</div>
-
-<script>
-// Firebase
+// --- Firebase Reference ---
 const playersCol = db.collection('players');
 const gameState = db.collection('game').doc('state');
 
 let currentQ = 0;
 let timerInterval;
 
-// Beispiel-Fragen
-const questions = [
+// --- Beispiel-Fragen (10 Kategorien × 5 Fragen) ---
+let questions = [
   {category:"Allgemeinwissen", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
   {category:"Allgemeinwissen", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
   {category:"Allgemeinwissen", question:"Frage 3?", points:3, options:["A","B","C","D"], answer:2},
   {category:"Allgemeinwissen", question:"Frage 4?", points:4, options:["A","B","C","D"], answer:3},
-  {category:"Allgemeinwissen", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0}
+  {category:"Allgemeinwissen", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0},
+  // ... weitere Kategorien hier einfügen
 ];
 
-// Spieler beitreten
+// --- Spieler beitreten ---
 document.getElementById('joinBtn')?.addEventListener('click', () => {
-  const name = document.getElementById('playerName').value.trim();
-  const team = document.getElementById('teamSelect')?.value;
-  if(!name || !team) return alert("Bitte Name und Team auswählen!");
+  const name = document.getElementById('playerName').value;
+  const team = document.getElementById('teamSelect').value;
+  if(!name) return alert("Bitte Name eingeben!");
+  
   playersCol.add({name, team, score:0}).then(()=>{
-    document.getElementById('joinArea').style.display='none';
+    document.getElementById('name-team').style.display='none';
     document.getElementById('quizArea').style.display='block';
   });
 });
 
-// Firestore Listener
-gameState.onSnapshot(doc=>{
-  const data = doc.data();
-  if(!data) return;
+// --- Admin Lobby & Team-Punkte ---
+function updateLobbyAndScores(){
+  playersCol.get().then(snapshot=>{
+    let redScore=0, blueScore=0;
+    const redDiv = document.getElementById('redTeam');
+    const blueDiv = document.getElementById('blueTeam');
+    redDiv.innerHTML="<h3>Rotes Team</h3>";
+    blueDiv.innerHTML="<h3>Blaues Team</h3>";
+    snapshot.forEach(doc=>{
+      const data = doc.data();
+      const el = document.createElement('div');
+      el.textContent = data.name + " (" + data.score + " Punkte)";
+      if(data.team==="rot"){ redDiv.appendChild(el); redScore+=data.score||0; }
+      else { blueDiv.appendChild(el); blueScore+=data.score||0; }
+    });
+    document.getElementById('redScore').textContent=redScore;
+    document.getElementById('blueScore').textContent=blueScore;
+  });
+}
+setInterval(updateLobbyAndScores,3000);
 
-  const started = data.started || false;
-  const currentQuestion = data.currentQuestion ?? 0;
-
-  if(!started){
-    // Noch nicht gestartet
-    document.getElementById('joinArea').style.display='block';
-    document.getElementById('quizArea').style.display='none';
-    document.getElementById('endOverlay').style.display='none';
-  } 
-  else if(currentQuestion < questions.length){
-    // Quiz läuft
-    currentQ = currentQuestion;
-    document.getElementById('joinArea').style.display='none';
-    document.getElementById('quizArea').style.display='block';
-    document.getElementById('endOverlay').style.display='none';
-    showQuestion(currentQ);
-  } 
-  else {
-    // Quiz beendet
-    document.getElementById('quizArea').style.display='none';
-    document.getElementById('joinArea').style.display='none';
-    document.getElementById('endOverlay').style.display='flex';
-  }
+// --- Quiz starten ---
+document.getElementById('startBtn')?.addEventListener('click', ()=>{
+  gameState.set({currentQuestion:0, started:true});
 });
 
-// Fragen anzeigen
-function showQuestion(index){
-  const q = questions[index];
-  if(!q) return;
+// --- Fragen anzeigen ---
+gameState.onSnapshot(doc=>{
+  const data = doc.data();
+  if(data?.started) showQuestion(currentQ);
+});
 
+function showQuestion(index){
+  if(index >= questions.length){
+    document.getElementById('quizArea').innerHTML="<h2>Danke fürs Mitmachen! 🍺</h2>";
+    return;
+  }
+  const q = questions[index];
   document.getElementById('categoryTitle').textContent = q.category;
   document.getElementById('questionText').textContent = q.question;
   document.getElementById('pointsNumber').textContent = q.points;
 
   const optionsDiv = document.getElementById('options');
-  optionsDiv.innerHTML = '';
+  optionsDiv.innerHTML="";
   q.options.forEach((opt,i)=>{
     const div = document.createElement('div');
-    div.textContent = opt;
-    div.className = "answerBtn";
-    div.onclick = async ()=>{
+    div.textContent=opt;
+    div.addEventListener('click', async ()=>{
       const playerName = document.getElementById('playerName').value;
       const snapshot = await playersCol.where('name','==',playerName).get();
       if(!snapshot.empty){
         const docRef = snapshot.docs[0];
         const playerData = docRef.data();
         if(i===q.answer){
-          docRef.ref.update({score: (playerData.score||0) + q.points});
+          const newScore = (playerData.score||0)+q.points;
+          docRef.ref.update({score:newScore});
         }
       }
-      gameState.update({currentQuestion: index+1});
-    };
+      currentQ++;
+      showQuestion(currentQ);
+    });
     optionsDiv.appendChild(div);
   });
 
-  let time = 15;
-  document.getElementById('timer').textContent = time;
+  // Timer 15 Sekunden
+  let time=15;
+  document.getElementById('timer').textContent=time;
   clearInterval(timerInterval);
   timerInterval = setInterval(()=>{
     time--;
-    document.getElementById('timer').textContent = time;
-    if(time<=0){
-      clearInterval(timerInterval);
-      gameState.update({currentQuestion: index+1});
-    }
+    document.getElementById('timer').textContent=time;
+    if(time<=0){ clearInterval(timerInterval); currentQ++; showQuestion(currentQ);}
   },1000);
 }
-
-// Zurück zum Start
-document.getElementById('backToStartBtn').onclick = ()=>{
-  document.getElementById('endOverlay').style.display='none';
-  document.getElementById('quizArea').style.display='none';
-  document.getElementById('joinArea').style.display='block';
-  currentQ = 0;
-};
-</script>
