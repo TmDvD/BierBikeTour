@@ -339,7 +339,10 @@ function showQuestion(){
 
     const colors = ["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
     const color = colors[currentQuestionSet % colors.length];
-    categoryEl.style.color = color;
+    // stattdessen Hintergrund einfärben
+	document.getElementById("questionHeader").style.background = color;
+	categoryEl.style.color = "#fff"; // weiße Schrift für Kontrast
+
 
     if(currentQuestionIndex === 0) animateCategory(categoryEl,currentQuestionSet);
 
