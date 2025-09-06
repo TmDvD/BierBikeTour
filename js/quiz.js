@@ -1,5 +1,33 @@
+<!-- Endoverlay -->
+<div id="endOverlay" style="
+  display:none;
+  position:fixed;
+  top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.7);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  z-index:3000;
+  text-align:center;
+">
+  <h2>Quiz beendet!</h2>
+  <p>Danke fürs Mitmachen 🍺</p>
+  <button id="backToStartBtn" style="
+    margin-top:20px;
+    padding:12px 24px;
+    font-size:1.2em;
+    border:none;
+    border-radius:10px;
+    background:#444;
+    color:white;
+    cursor:pointer;
+  ">Zurück zum Start</button>
+</div>
+
 <script>
-// --- Firebase Reference ---
+// Firebase
 const playersCol = db.collection('players');
 const gameState = db.collection('game').doc('state');
 
@@ -7,7 +35,7 @@ let currentQ = 0;
 let timerInterval;
 
 // Beispiel-Fragen
-let questions = [
+const questions = [
   {category:"Allgemeinwissen", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
   {category:"Allgemeinwissen", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
   {category:"Allgemeinwissen", question:"Frage 3?", points:3, options:["A","B","C","D"], answer:2},
@@ -19,38 +47,11 @@ let questions = [
 document.getElementById('joinBtn')?.addEventListener('click', () => {
   const name = document.getElementById('playerName').value.trim();
   const team = document.getElementById('teamSelect')?.value;
-  if(!name) return alert("Bitte Name eingeben!");
-  if(!team) return alert("Bitte Team auswählen!");
+  if(!name || !team) return alert("Bitte Name und Team auswählen!");
   playersCol.add({name, team, score:0}).then(()=>{
-    document.getElementById('name-team').style.display='none';
+    document.getElementById('joinArea').style.display='none';
     document.getElementById('quizArea').style.display='block';
   });
-});
-
-// Admin Lobby & Team-Punkte
-function updateLobbyAndScores(){
-  playersCol.get().then(snapshot=>{
-    let redScore=0, blueScore=0;
-    const redDiv = document.getElementById('redTeam');
-    const blueDiv = document.getElementById('blueTeam');
-    redDiv.innerHTML="<h3>Rotes Team</h3>";
-    blueDiv.innerHTML="<h3>Blaues Team</h3>";
-    snapshot.forEach(doc=>{
-      const data = doc.data();
-      const el = document.createElement('div');
-      el.textContent = data.name + " (" + (data.score||0) + " Punkte)";
-      if(data.team==="rot"){ redDiv.appendChild(el); redScore+=data.score||0; }
-      else { blueDiv.appendChild(el); blueScore+=data.score||0; }
-    });
-    document.getElementById('redScore').textContent = redScore;
-    document.getElementById('blueScore').textContent = blueScore;
-  });
-}
-setInterval(updateLobbyAndScores,3000);
-
-// Quiz starten
-document.getElementById('startBtn')?.addEventListener('click', ()=>{
-  gameState.set({currentQuestion:0, started:true});
 });
 
 // Firestore Listener
@@ -58,32 +59,32 @@ gameState.onSnapshot(doc=>{
   const data = doc.data();
   if(!data) return;
 
-  // Spiel läuft
-  if(data.started === true){
-    const dbQ = data.currentQuestion ?? 0;
+  const started = data.started || false;
+  const currentQuestion = data.currentQuestion ?? 0;
 
+  if(!started){
+    // Noch nicht gestartet
+    document.getElementById('joinArea').style.display='block';
+    document.getElementById('quizArea').style.display='none';
+    document.getElementById('endOverlay').style.display='none';
+  } 
+  else if(currentQuestion < questions.length){
     // Quiz läuft
-    if(dbQ < questions.length){
-      currentQ = dbQ;
-      document.getElementById('endOverlay').style.display = 'none';
-      document.getElementById('quizArea').style.display = 'block';
-      showQuestion(currentQ);
-    } 
-    // Quiz beendet
-    else {
-      document.getElementById('quizArea').style.display = 'none';
-      document.getElementById('endOverlay').style.display = 'flex';
-    }
-  }
-  // Spiel noch nicht gestartet
+    currentQ = currentQuestion;
+    document.getElementById('joinArea').style.display='none';
+    document.getElementById('quizArea').style.display='block';
+    document.getElementById('endOverlay').style.display='none';
+    showQuestion(currentQ);
+  } 
   else {
-    document.getElementById('quizArea').style.display = 'none';
-    document.getElementById('endOverlay').style.display = 'none';
-    document.getElementById('joinArea').style.display = 'block';
+    // Quiz beendet
+    document.getElementById('quizArea').style.display='none';
+    document.getElementById('joinArea').style.display='none';
+    document.getElementById('endOverlay').style.display='flex';
   }
 });
 
-// Frage anzeigen
+// Fragen anzeigen
 function showQuestion(index){
   const q = questions[index];
   if(!q) return;
@@ -93,24 +94,23 @@ function showQuestion(index){
   document.getElementById('pointsNumber').textContent = q.points;
 
   const optionsDiv = document.getElementById('options');
-  optionsDiv.innerHTML = "";
+  optionsDiv.innerHTML = '';
   q.options.forEach((opt,i)=>{
     const div = document.createElement('div');
-    div.textContent=opt;
+    div.textContent = opt;
     div.className = "answerBtn";
-    div.addEventListener('click', async ()=>{
+    div.onclick = async ()=>{
       const playerName = document.getElementById('playerName').value;
       const snapshot = await playersCol.where('name','==',playerName).get();
       if(!snapshot.empty){
         const docRef = snapshot.docs[0];
         const playerData = docRef.data();
-        if(i === q.answer){
-          const newScore = (playerData.score||0) + q.points;
-          docRef.ref.update({score:newScore});
+        if(i===q.answer){
+          docRef.ref.update({score: (playerData.score||0) + q.points});
         }
       }
-      gameState.update({ currentQuestion: index+1 });
-    });
+      gameState.update({currentQuestion: index+1});
+    };
     optionsDiv.appendChild(div);
   });
 
@@ -120,18 +120,18 @@ function showQuestion(index){
   timerInterval = setInterval(()=>{
     time--;
     document.getElementById('timer').textContent = time;
-    if(time <= 0){
+    if(time<=0){
       clearInterval(timerInterval);
-      gameState.update({ currentQuestion: index+1 });
+      gameState.update({currentQuestion: index+1});
     }
-  }, 1000);
+  },1000);
 }
 
-// Endoverlay Button zurück zum Start
-document.getElementById('backToStartBtn')?.addEventListener('click', ()=>{
-  document.getElementById('endOverlay').style.display = 'none';
-  document.getElementById('quizArea').style.display = 'none';
-  document.getElementById('joinArea').style.display = 'block';
+// Zurück zum Start
+document.getElementById('backToStartBtn').onclick = ()=>{
+  document.getElementById('endOverlay').style.display='none';
+  document.getElementById('quizArea').style.display='none';
+  document.getElementById('joinArea').style.display='block';
   currentQ = 0;
-});
+};
 </script>
