@@ -335,6 +335,7 @@ function showQuestion(){
     const q = qSet.questions[currentQuestionIndex];
 
     const categoryEl = document.getElementById("categoryName");
+	const pointsEl = document.getElementById("questionPoints");
     categoryEl.textContent = qSet.category;
 
     const colors = ["#03a9f4","#ff9800","#8bc34a","#e91e63","#9c27b0"];
@@ -342,6 +343,7 @@ function showQuestion(){
     // stattdessen Hintergrund einfärben
 	document.getElementById("questionHeader").style.background = color;
 	categoryEl.style.color = "#fff"; // weiße Schrift für Kontrast
+	pointsEl.style.color = "#fff"; // weiße Schrift für Kontrast
 
 
     if(currentQuestionIndex === 0) animateCategory(categoryEl,currentQuestionSet);
