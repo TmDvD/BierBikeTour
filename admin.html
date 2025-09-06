@@ -137,29 +137,29 @@ const gameState = db.collection("game").doc("state");
 
 // Login
 document.getElementById("loginBtn").addEventListener("click", ()=>{
-  const pw=document.getElementById("adminPw").value;
+  const pw = document.getElementById("adminPw").value;
   if(pw==="1557"){
     document.getElementById("loginArea").style.display="none";
     document.getElementById("adminArea").style.display="block";
   } else { alert("Falsches Passwort!"); }
 });
 
-// Teams live
+// Teams live anzeigen
 playersCol.onSnapshot(snapshot=>{
   let redHTML="", blueHTML="";
   let redCount=0, blueCount=0;
   let redSum=0, blueSum=0;
   snapshot.forEach(doc=>{
-    const p=doc.data();
-    const score=p.score||0;
-    const entry=`<div class="player"><span>${p.name}</span><span class="score">${score} P.</span></div>`;
-    if(p.team==="rot"){redHTML+=entry; redCount++; redSum+=score;}
-    else if(p.team==="blau"){blueHTML+=entry; blueCount++; blueSum+=score;}
+    const p = doc.data();
+    const score = p.score || 0;
+    const entry = `<div class="player"><span>${p.name}</span><span class="score">${score} P.</span></div>`;
+    if(p.team==="rot"){ redHTML+=entry; redCount++; redSum+=score; }
+    else if(p.team==="blau"){ blueHTML+=entry; blueCount++; blueSum+=score; }
   });
-  document.getElementById("redTeam").innerHTML=redHTML;
-  document.getElementById("blueTeam").innerHTML=blueHTML;
-  document.getElementById("redCount").innerText=redCount;
-  document.getElementById("blueCount").innerText=blueCount;
+  document.getElementById("redTeam").innerHTML = redHTML;
+  document.getElementById("blueTeam").innerHTML = blueHTML;
+  document.getElementById("redCount").innerText = redCount;
+  document.getElementById("blueCount").innerText = blueCount;
   document.getElementById("redTotal").innerText = "Gesamt: " + redSum + " P.";
   document.getElementById("blueTotal").innerText = "Gesamt: " + blueSum + " P.";
 });
@@ -180,35 +180,53 @@ document.getElementById("resetBtn").addEventListener("click", async ()=>{
   }
 });
 
-// Timer
+// Timer und Countdown
 let mainTimerInt;
 gameState.onSnapshot(doc=>{
-  const data=doc.data();
+  const data = doc.data();
   if(!data) return;
+
+  // Countdown starten, wenn Spiel gestartet & Countdown noch nicht gestartet
   if(data.started && !data.countdownStarted){
-    startMainTimer(600);
+    startCountdownAdmin(5); // 5 Sekunden Countdown synchron zu Spielern
     gameState.set({countdownStarted:true},{merge:true});
   }
 });
 
-function startMainTimer(sec){
-  clearInterval(mainTimerInt);
-  let c=sec;
+// Countdown Funktion für Admin
+function startCountdownAdmin(sec){
+  let c = sec;
   updateTimer(c);
-  mainTimerInt=setInterval(()=>{
+  const interval = setInterval(()=>{
     c--;
     updateTimer(c);
-    if(c<=0){
+    if(c < 0){
+      clearInterval(interval);
+      startMainTimer(600); // 10 Minuten Quiz-Timer
+    }
+  }, 1000);
+}
+
+// Quiz Timer starten
+function startMainTimer(sec){
+  clearInterval(mainTimerInt);
+  let c = sec;
+  updateTimer(c);
+  mainTimerInt = setInterval(()=>{
+    c--;
+    updateTimer(c);
+    if(c <= 0){
       clearInterval(mainTimerInt);
       document.getElementById("timer").innerText="Ende";
     }
-  },1000);
+  }, 1000);
 }
 
+// Timer-Anzeige aktualisieren
 function updateTimer(c){
-  const min=Math.floor(c/60);
-  const s=c%60;
-  document.getElementById("timer").innerText=min+":"+(s<10?"0"+s:s);
+  const min = Math.floor(c/60);
+  const s = c % 60;
+  document.getElementById("timer").innerText = min + ":" + (s<10?"0"+s:s);
 }
 </script>
 </body>
