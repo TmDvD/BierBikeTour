@@ -295,18 +295,26 @@ document.getElementById("joinBtn").addEventListener("click", async ()=>{
 
 // GameState Listener
 gameState.onSnapshot(doc=>{
-    const data=doc.data();
+    const data = doc.data();
     if(!data) return;
-    if(data.started && currentPlayerId){ startCountdown(5); }
+
+    // 🔹 Nur starten, wenn Admin Spiel startet und Countdown noch nicht aktiv
+    if(data.started && currentPlayerId && !data.countdownStarted){
+        startCountdown(5);
+        // 🔹 Firestore-Flag setzen, damit andere Spieler nicht doppelt starten
+        gameState.update({countdownStarted:true});
+    }
+
+    // Reset
     if(data.gameReset){
         document.getElementById("quizArea").style.display="none";
         document.getElementById("waitingArea").style.display="none";
         document.getElementById("joinArea").style.display="block";
         document.getElementById("playerName").value="";
-        selectedTeam=null;
-        score=0;
-        currentQuestionIndex=0;
-        currentQuestionSet=0;
+        selectedTeam = null;
+        score = 0;
+        currentQuestionIndex = 0;
+        currentQuestionSet = 0;
         if(currentPlayerId){ playersCol.doc(currentPlayerId).delete(); currentPlayerId=null; }
         gameState.update({gameReset:false});
     }
@@ -412,15 +420,22 @@ function animateCategory(categoryEl,categoryIndex){
 }
 
 // Antworten und Punkteanimation
-function selectAnswer(btn,correct,currentPoints){
+function selectAnswer(btn, correct, currentPoints){
     clearInterval(questionTimer);
     const buttons=document.querySelectorAll(".answerBtn");
     buttons.forEach(b=>{
         b.disabled=true;
         if(b.dataset.correct==="true") b.classList.add("correct");
     });
-    if(correct){ btn.classList.add("correct"); score+=currentPoints; animateScore(currentPoints); }
-    else btn.classList.add("wrong");
+    if(correct){
+        btn.classList.add("correct");
+        score += currentPoints;
+        animateScore(currentPoints);
+        // 🔹 Punkte direkt in Firestore speichern
+        if(currentPlayerId){
+            playersCol.doc(currentPlayerId).update({score});
+        }
+    } else btn.classList.add("wrong");
     setTimeout(autoNextQuestion,1000);
 }
 
