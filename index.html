@@ -307,17 +307,21 @@ gameState.onSnapshot(doc=>{
 
     // Reset
     if(data.gameReset){
-        document.getElementById("quizArea").style.display="none";
-        document.getElementById("waitingArea").style.display="none";
-        document.getElementById("joinArea").style.display="block";
-        document.getElementById("playerName").value="";
-        selectedTeam = null;
-        score = 0;
-        currentQuestionIndex = 0;
-        currentQuestionSet = 0;
-        if(currentPlayerId){ playersCol.doc(currentPlayerId).delete(); currentPlayerId=null; }
-        gameState.update({gameReset:false});
-    }
+		document.getElementById("quizArea").style.display="none";
+		document.getElementById("waitingArea").style.display="none";
+		document.getElementById("joinArea").style.display="block";
+		document.getElementById("playerName").value="";
+		selectedTeam = null;
+		score = 0;
+		currentQuestionIndex = 0;
+		currentQuestionSet = 0;
+		document.getElementById("progress").textContent = ""; // 🔹 Fortschrittszähler leeren
+		if(currentPlayerId){
+			playersCol.doc(currentPlayerId).delete();
+			currentPlayerId=null;
+		}
+		gameState.update({gameReset:false});
+	}
 });
 
 // Countdown Overlay
