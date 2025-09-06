@@ -314,16 +314,22 @@ gameState.onSnapshot(doc=>{
     }
 
     // Reset
-    if(data.gameReset){
+	if(data.gameReset){
 		document.getElementById("quizArea").style.display="none";
 		document.getElementById("waitingArea").style.display="none";
 		document.getElementById("joinArea").style.display="block";
+
 		document.getElementById("playerName").value="";
 		selectedTeam = null;
 		score = 0;
 		currentQuestionIndex = 0;
 		currentQuestionSet = 0;
-		document.getElementById("progress").textContent = ""; // 🔹 Fortschrittszähler leeren
+	
+		// 🔹 Fortschrittszähler verstecken
+		const progressEl = document.getElementById("progress");
+		progressEl.textContent = "";
+		progressEl.style.display = "none";
+	
 		if(currentPlayerId){
 			playersCol.doc(currentPlayerId).delete();
 			currentPlayerId=null;
@@ -334,19 +340,28 @@ gameState.onSnapshot(doc=>{
 
 // Countdown Overlay
 function startCountdown(sec){
-    const overlay=document.getElementById("countdownOverlay");
-    overlay.style.display="flex";
-    let c=sec;
-    overlay.textContent=c;
-    const colors=["#28a745","#8bc34a","#ffc107","#ff9800","#dc3545"];
-    let idx=0;
-    overlay.style.color=colors[idx];
-    const int=setInterval(()=>{
-        c--; idx++;
-        if(idx<colors.length) overlay.style.color=colors[idx];
-        overlay.textContent=c>0?c:"Start!";
-        if(c<0){ clearInterval(int); overlay.style.display="none"; document.getElementById("waitingArea").style.display="none"; document.getElementById("quizArea").style.display="block"; showQuestion(); }
-    },1000);
+    const overlay = document.getElementById("countdownOverlay");
+    overlay.style.display = "flex";
+    let c = sec;
+    overlay.textContent = c;
+
+    const int = setInterval(() => {
+        c--;
+        overlay.textContent = c > 0 ? c : "Start!";
+        if(c < 0){
+            clearInterval(int);
+            overlay.style.display = "none";
+            document.getElementById("waitingArea").style.display = "none";
+            document.getElementById("quizArea").style.display = "block";
+
+            // 🔹 Fortschrittszähler jetzt sichtbar machen
+            const progressEl = document.getElementById("progress");
+            progressEl.style.display = "block";
+
+            // Erste Frage anzeigen
+            showQuestion();
+        }
+    }, 1000);
 }
 
 // Frage anzeigen
