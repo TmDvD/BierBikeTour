@@ -165,8 +165,14 @@ playersCol.onSnapshot(snapshot=>{
 });
 
 // Start Quiz
-document.getElementById("startBtn").addEventListener("click", ()=>{
-  gameState.set({started:true, countdownStarted:false, gameReset:false},{merge:true});
+document.getElementById("startBtn").addEventListener("click", async ()=>{
+    const data = (await gameState.get()).data();
+    if(data && data.started){
+        alert("Es läuft bereits ein Quiz!");
+        return;
+    }
+    // Quiz starten
+    await gameState.set({started:true, countdownStarted:false, gameReset:false},{merge:true});
 });
 
 // Reset Quiz
