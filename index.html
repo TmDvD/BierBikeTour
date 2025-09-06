@@ -283,14 +283,14 @@ document.getElementById("joinBtn").addEventListener("click", async ()=>{
     if(!name||name.length>10){ alert("Ungültiger Name (max 10 Zeichen)!"); return; }
     if(!selectedTeam){ alert("Bitte Team wählen!"); return; }
     const existing=await playersCol.where("name","==",name).get();
-    if(!existing.empty){ alert("Mach jetzt nich den!"); return; }
+    if(!existing.empty){ alert("Name bereits vorhanden!"); return; }
     const gameDoc=await gameState.get();
-    if(gameDoc.exists && gameDoc.data().started){ alert("Nee Bruder, du warst einfach zu langsam!!!"); return; }
+    if(gameDoc.exists && gameDoc.data().started){ alert("Login wärend des laufende Spiels nicht möglich.!!!"); return; }
     const docRef=await playersCol.add({name,team:selectedTeam,score:0});
     currentPlayerId=docRef.id;
     document.getElementById("joinArea").style.display="none";
     document.getElementById("waitingArea").style.display="block";
-    document.getElementById("waitingMessage").textContent="Chill mal deine Base, es geht sofort weiter...";
+    document.getElementById("waitingMessage").textContent="Bitte warten ,bis der Admin das Spiel startet...";
 });
 
 // GameState Listener
@@ -431,7 +431,7 @@ function autoNextQuestion(){
         currentQuestionIndex=0;
         currentQuestionSet++;
         if(currentQuestionSet>=questionCategories.length){
-            alert("Yoo Digga, Quiz beendet!");
+            alert("Quiz beendet! Danke für's mitmachen");
             return;
         }
     }
