@@ -6,22 +6,22 @@ const gameState = db.collection('game').doc('state');
 let currentQ = 0;
 let timerInterval;
 
-// --- Beispiel-Fragen (10 Kategorien × 5 Fragen) ---
+// --- Beispiel-Fragen ---
 let questions = [
   {category:"Allgemeinwissen", question:"Frage 1?", points:1, options:["A","B","C","D"], answer:0},
   {category:"Allgemeinwissen", question:"Frage 2?", points:2, options:["A","B","C","D"], answer:1},
   {category:"Allgemeinwissen", question:"Frage 3?", points:3, options:["A","B","C","D"], answer:2},
   {category:"Allgemeinwissen", question:"Frage 4?", points:4, options:["A","B","C","D"], answer:3},
-  {category:"Allgemeinwissen", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0},
-  // ... weitere Kategorien hier einfügen
+  {category:"Allgemeinwissen", question:"Frage 5?", points:5, options:["A","B","C","D"], answer:0}
 ];
 
 // --- Spieler beitreten ---
 document.getElementById('joinBtn')?.addEventListener('click', () => {
-  const name = document.getElementById('playerName').value;
-  const team = document.getElementById('teamSelect').value;
+  const name = document.getElementById('playerName').value.trim();
+  const team = document.getElementById('teamSelect')?.value;
   if(!name) return alert("Bitte Name eingeben!");
-  
+  if(!team) return alert("Bitte Team auswählen!");
+
   playersCol.add({name, team, score:0}).then(()=>{
     document.getElementById('name-team').style.display='none';
     document.getElementById('quizArea').style.display='block';
@@ -39,12 +39,12 @@ function updateLobbyAndScores(){
     snapshot.forEach(doc=>{
       const data = doc.data();
       const el = document.createElement('div');
-      el.textContent = data.name + " (" + data.score + " Punkte)";
+      el.textContent = data.name + " (" + (data.score||0) + " Punkte)";
       if(data.team==="rot"){ redDiv.appendChild(el); redScore+=data.score||0; }
       else { blueDiv.appendChild(el); blueScore+=data.score||0; }
     });
-    document.getElementById('redScore').textContent=redScore;
-    document.getElementById('blueScore').textContent=blueScore;
+    document.getElementById('redScore').textContent = redScore;
+    document.getElementById('blueScore').textContent = blueScore;
   });
 }
 setInterval(updateLobbyAndScores,3000);
@@ -54,22 +54,29 @@ document.getElementById('startBtn')?.addEventListener('click', ()=>{
   gameState.set({currentQuestion:0, started:true});
 });
 
-// --- Fragen anzeigen ---
+// --- Fragen anzeigen / Firestore Listener ---
 gameState.onSnapshot(doc=>{
   const data = doc.data();
-  if(data?.started){
-    currentQ = data.currentQuestion ?? 0;
+  if(!data) return;
 
-    if(currentQ < questions.length){
+  // Spiel muss gestartet sein
+  if(data.started === true){
+    const dbQ = data.currentQuestion ?? 0;
+
+    if(dbQ < questions.length){
+      currentQ = dbQ;
       showQuestion(currentQ);
     } else {
-      // Nur am echten Ende Overlay anzeigen
-      document.getElementById('quizArea').style.display = 'none';
-      document.getElementById('endOverlay').style.display = 'flex';
+      // Overlay nur anzeigen, wenn Quiz fertig und noch nicht sichtbar
+      if(document.getElementById('endOverlay').style.display === 'none'){
+        document.getElementById('quizArea').style.display = 'none';
+        document.getElementById('endOverlay').style.display = 'flex';
+      }
     }
   }
 });
 
+// --- Frage anzeigen ---
 function showQuestion(index){
   const q = questions[index];
   if(!q) return;
@@ -79,18 +86,19 @@ function showQuestion(index){
   document.getElementById('pointsNumber').textContent = q.points;
 
   const optionsDiv = document.getElementById('options');
-  optionsDiv.innerHTML="";
+  optionsDiv.innerHTML = "";
   q.options.forEach((opt,i)=>{
     const div = document.createElement('div');
-    div.textContent=opt;
+    div.textContent = opt;
+    div.className = "answerBtn";
     div.addEventListener('click', async ()=>{
       const playerName = document.getElementById('playerName').value;
       const snapshot = await playersCol.where('name','==',playerName).get();
       if(!snapshot.empty){
         const docRef = snapshot.docs[0];
         const playerData = docRef.data();
-        if(i===q.answer){
-          const newScore = (playerData.score||0)+q.points;
+        if(i === q.answer){
+          const newScore = (playerData.score||0) + q.points;
           docRef.ref.update({score:newScore});
         }
       }
@@ -100,24 +108,24 @@ function showQuestion(index){
   });
 
   // Timer 15 Sekunden
-  let time=15;
-  document.getElementById('timer').textContent=time;
+  let time = 15;
+  document.getElementById('timer').textContent = time;
   clearInterval(timerInterval);
   timerInterval = setInterval(()=>{
     time--;
-    document.getElementById('timer').textContent=time;
-    if(time<=0){ 
-      clearInterval(timerInterval); 
+    document.getElementById('timer').textContent = time;
+    if(time <= 0){
+      clearInterval(timerInterval);
       gameState.update({ currentQuestion: index+1 });
     }
-  },1000);
+  }, 1000);
 }
 
 // --- Endoverlay Button zurück zum Start ---
 document.getElementById('backToStartBtn')?.addEventListener('click', ()=>{
-  document.getElementById('endOverlay').style.display='none';
-  document.getElementById('quizArea').style.display='none';
-  document.getElementById('joinArea').style.display='block';
+  document.getElementById('endOverlay').style.display = 'none';
+  document.getElementById('quizArea').style.display = 'none';
+  document.getElementById('joinArea').style.display = 'block';
   currentQ = 0;
 });
 </script>
